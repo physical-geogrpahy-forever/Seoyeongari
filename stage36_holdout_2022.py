@@ -39,7 +39,6 @@ def main():
           'mar_apr_complete_dry_days':int(np.sum(aspr<1.0)),
           'may_jun_mean_hydrologic_area_m2':float(np.mean(h['area'][mj])),
           'may_jun_returnflow_m3':float(np.sum(h['return_flow'][mj]))}
-        }
     out={'model':'Stage36 locked balanced hydroperiod candidate','fit_used_2022':False,
          'pred_2022_m2':pred,'obs_2022_m2':OBS2022,'error_m2':pred-OBS2022,'abs_pct_error':abs(pred-OBS2022)/OBS2022*100,
          'state_2022':S22,'returnflow30_anom_2022_m3':H22,'ecology_effect_m2':eco,'hydrology_effect_m2':hyd,
