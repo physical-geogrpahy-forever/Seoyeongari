@@ -1,10 +1,10 @@
-name: Stage35D flood reversal identifiability
+name: Stage35D excluded-2022 holdout
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage35d:
+  holdout:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -13,12 +13,12 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage 35D
-        run: python stage35d_flood_reversal.py
+      - name: Run locked Stage 35D holdout
+        run: python stage35d_holdout_2022.py
       - name: Show summary
-        run: cat stage35d_outputs/stage35d_summary.json
+        run: cat stage35d_holdout_outputs/stage35d_holdout_2022.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage35d-results
-          path: stage35d_outputs/
+          name: stage35d-holdout-2022
+          path: stage35d_holdout_outputs/
           retention-days: 30
