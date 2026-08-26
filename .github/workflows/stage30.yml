@@ -1,12 +1,12 @@
-name: Stage34 excluded-2022 holdout
+name: Stage35A mass-balance-first hydro-ecology
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage34-holdout:
+  run-stage35a:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run locked Stage 34 holdout
-        run: python stage34_holdout_2022.py
-      - name: Show holdout summary
+      - name: Run Stage 35A mass-balance-first calibration
+        run: python stage35a_mass_balance_hydroeco.py
+      - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage34_holdout_outputs/stage34_holdout_2022.json ]; then cat stage34_holdout_outputs/stage34_holdout_2022.json; fi
+          if [ -f stage35a_outputs/stage35a_summary.json ]; then cat stage35a_outputs/stage35a_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage34-holdout-2022
-          path: stage34_holdout_outputs/
+          name: stage35a-results
+          path: stage35a_outputs/
           retention-days: 30
