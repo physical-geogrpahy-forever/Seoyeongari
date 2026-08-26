@@ -28,6 +28,7 @@ REQUIRED_CONTRACT={
     'spring_dry_selection_requirement':False,
     'domain_double_count':False,
     'rainfall_partition_exact':True,
+    'surface_loss_priority':False,
 }
 
 def contract_reasons(contract:dict)->list[str]:
