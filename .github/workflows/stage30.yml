@@ -16,16 +16,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 26 regression and Stage 30 screen
-        run: python stage30_macro_head_drainage.py
+      - name: Run optimized Stage 26 regression and Stage 30 screen
+        run: python stage30_macro_head_drainage_fast.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage30_outputs/stage30_summary.json ]; then cat stage30_outputs/stage30_summary.json; fi
+          if [ -f stage30_fast_outputs/stage30_fast_summary.json ]; then cat stage30_fast_outputs/stage30_fast_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage30-results
-          path: stage30_outputs/
+          name: stage30-fast-results
+          path: stage30_fast_outputs/
           retention-days: 30
