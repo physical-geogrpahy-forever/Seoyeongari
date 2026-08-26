@@ -1,10 +1,10 @@
-name: Stage36 locked holdout and hydroperiod diagnostics
+name: Stage37 groundwater-loss hydro-ecology
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage36-holdout:
+  run-stage37:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -13,12 +13,12 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run locked Stage 36 holdout
-        run: python stage36_holdout_2022.py
+      - name: Run Stage 37
+        run: python stage37_groundwater_loss.py
       - name: Show summary
-        run: cat stage36_holdout_outputs/stage36_holdout_2022.json
+        run: cat stage37_outputs/stage37_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage36-holdout-2022
-          path: stage36_holdout_outputs/
+          name: stage37-results
+          path: stage37_outputs/
           retention-days: 30
