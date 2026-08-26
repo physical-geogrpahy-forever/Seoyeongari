@@ -1,10 +1,10 @@
-name: Stage35E nonzero-hydrology holdout
+name: Stage35F storage-area coupled hydro-ecology
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  holdout:
+  run-stage35f:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -13,12 +13,12 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run locked Stage 35E holdout
-        run: python stage35e_locked_nonzero_hydro_holdout.py
+      - name: Run Stage 35F
+        run: python stage35f_storage_area_coupling.py
       - name: Show summary
-        run: cat stage35e_holdout_outputs/stage35e_holdout_2022.json
+        run: cat stage35f_outputs/stage35f_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage35e-holdout-2022
-          path: stage35e_holdout_outputs/
+          name: stage35f-results
+          path: stage35f_outputs/
           retention-days: 30
