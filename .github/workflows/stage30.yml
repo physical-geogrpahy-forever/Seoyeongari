@@ -1,14 +1,12 @@
-name: Stage31C consistent calibration
+name: Stage31C compact structural check
 on:
   push:
     branches: [chatgpt-stage30-20260826]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 jobs:
-  run-stage31c-fast:
+  run-stage31c-mini:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -16,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run fast sign-consistent Stage 31C screen
-        run: python stage31c_fast_consistent.py
+      - name: Run compact Stage 31C check
+        run: python stage31c_mini.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage31c_fast_outputs/stage31c_fast_summary.json ]; then cat stage31c_fast_outputs/stage31c_fast_summary.json; fi
+          if [ -f stage31c_mini_outputs/summary.json ]; then cat stage31c_mini_outputs/summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage31c-fast-results
-          path: stage31c_fast_outputs/
+          name: stage31c-mini-results
+          path: stage31c_mini_outputs/
           retention-days: 30
