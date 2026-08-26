@@ -1,4 +1,4 @@
-name: Stage31 TOPMODEL VSA
+name: Stage31B accuracy-first calibration
 on:
   push:
     branches: [chatgpt-stage30-20260826]
@@ -6,7 +6,7 @@ on:
     branches: [main]
   workflow_dispatch:
 jobs:
-  run-stage31:
+  run-stage31b:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -16,16 +16,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 31 VSA screen
-        run: python stage31_topmodel_vsa.py
+      - name: Run Stage 31B accuracy-first screen
+        run: python stage31b_accuracy_first.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage31_outputs/stage31_summary.json ]; then cat stage31_outputs/stage31_summary.json; fi
+          if [ -f stage31b_outputs/stage31b_summary.json ]; then cat stage31b_outputs/stage31b_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage31-results
-          path: stage31_outputs/
+          name: stage31b-results
+          path: stage31b_outputs/
           retention-days: 30
