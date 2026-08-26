@@ -1,10 +1,10 @@
-name: Stage31C compact structural check
+name: Stage31D hydro-anomaly check
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage31c-mini:
+  run-stage31d:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -14,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run compact Stage 31C check
-        run: python stage31c_mini.py
+      - name: Run Stage 31D hydrologic anomaly check
+        run: python stage31d_orthogonal_hydro.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage31c_mini_outputs/summary.json ]; then cat stage31c_mini_outputs/summary.json; fi
+          if [ -f stage31d_outputs/summary.json ]; then cat stage31d_outputs/summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage31c-mini-results
-          path: stage31c_mini_outputs/
+          name: stage31d-results
+          path: stage31d_outputs/
           retention-days: 30
