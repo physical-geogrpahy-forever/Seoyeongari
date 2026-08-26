@@ -1,10 +1,10 @@
-name: Stage38 domain-corrected strict model
+name: Stage39 nested strict validation
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage38:
+  run-stage39:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -13,24 +13,24 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run strict Stage 38 domain-corrected model
-        run: python stage38_domain_corrected.py
-      - name: Show locked training summary
+      - name: Run nested strict Stage 39
+        run: python stage39_nested_selection.py
+      - name: Show nested summary
         if: always()
-        run: cat stage38_outputs/stage38_summary.json || true
-      - name: Run 2022 holdout only after strict lock
+        run: cat stage39_outputs/stage39_summary.json || true
+      - name: Run 2022 holdout only after nested pass
         if: success()
-        run: python stage38_holdout_2022.py
+        run: python stage39_holdout_2022.py
       - name: Show holdout summary
         if: success()
-        run: cat stage38_holdout_outputs/stage38_holdout_2022.json
+        run: cat stage39_holdout_outputs/stage39_holdout_2022.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage38-strict-results
+          name: stage39-nested-results
           path: |
-            stage38_outputs/
-            stage38_holdout_outputs/
+            stage39_outputs/
+            stage39_holdout_outputs/
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
