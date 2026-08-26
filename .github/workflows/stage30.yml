@@ -14,15 +14,28 @@ jobs:
           python-version: '3.11'
       - run: pip install numpy pandas
       - name: Run nested strict Stage 39
+        id: nested
+        continue-on-error: true
         run: python stage39_nested_selection.py
       - name: Show nested summary
         if: always()
         run: cat stage39_outputs/stage39_summary.json || true
+      - name: Explain any rejected candidates without changing rules
+        if: always()
+        run: python stage39_diagnose.py
+      - name: Enforce nested gate
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          p=pathlib.Path('stage39_outputs/stage39_summary.json')
+          d=json.loads(p.read_text()) if p.exists() else {}
+          if not d.get('nested_selection_pass',False):
+              raise SystemExit('Stage39 nested gate failed; 2022 remains sealed')
+          PY
       - name: Run 2022 holdout only after nested pass
-        if: success()
         run: python stage39_holdout_2022.py
       - name: Show holdout summary
-        if: success()
         run: cat stage39_holdout_outputs/stage39_holdout_2022.json
       - uses: actions/upload-artifact@v4
         if: always()
