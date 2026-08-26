@@ -16,7 +16,7 @@ jobs:
       - name: Run Stage 41 direct-area operator + nested selection
         id: stage41
         continue-on-error: true
-        run: python stage41_direct_area_operator.py
+        run: python stage41_fast_runner.py
       - name: Show Stage 41 summary
         if: always()
         run: cat stage41_outputs/stage41_summary.json || true
