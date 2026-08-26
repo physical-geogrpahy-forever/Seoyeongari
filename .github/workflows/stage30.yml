@@ -1,49 +1,60 @@
-name: Stage39 nested strict validation
+name: Stage40 bidirectional hydroperiod strict validation
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage39:
+  run-stage40:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run nested strict Stage 39
-        id: nested
+      - name: Run Stage 40 bidirectional ecology + nested selection
+        id: stage40
         continue-on-error: true
-        run: python stage39_nested_selection.py
-      - name: Show nested summary
+        run: python stage40_bidirectional_hydroperiod.py
+      - name: Show Stage 40 summary
         if: always()
-        run: cat stage39_outputs/stage39_summary.json || true
-      - name: Explain any rejected candidates without changing rules
-        if: always()
-        run: python stage39_diagnose.py
-      - name: Enforce nested gate
+        run: cat stage40_outputs/stage40_summary.json || true
+      - name: Show rejection diagnostics preview
         if: always()
         run: |
           python - <<'PY'
-          import json, pathlib, sys
-          p=pathlib.Path('stage39_outputs/stage39_summary.json')
+          import json, pathlib
+          p=pathlib.Path('stage40_outputs/stage40_summary.json')
+          if p.exists():
+              d=json.loads(p.read_text())
+              print('status=',d.get('status'))
+              print('n_candidates=',d.get('n_candidates_interior_grid'))
+              print('n_final_rule_pass=',d.get('n_final_rule_pass'))
+              print('rejection_reason_counts=',d.get('rejection_reason_counts'))
+              print('best_rejected_preview=',json.dumps(d.get('best_rejected_preview',[])[:5],indent=2))
+          PY
+      - name: Enforce every Stage 40 pre-holdout gate
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('stage40_outputs/stage40_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
           if not d.get('nested_selection_pass',False):
-              raise SystemExit('Stage39 nested gate failed; 2022 remains sealed')
+              raise SystemExit('Stage40 strict/nested gate failed; 2022 remains sealed')
           PY
-      - name: Run 2022 holdout only after nested pass
-        run: python stage39_holdout_2022.py
+      - name: Run 2022 holdout only after full Stage 40 pass
+        run: python stage40_holdout_2022.py
       - name: Show holdout summary
-        run: cat stage39_holdout_outputs/stage39_holdout_2022.json
+        run: cat stage40_holdout_outputs/stage40_holdout_2022.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage39-nested-results
+          name: stage40-bidirectional-results
           path: |
-            stage39_outputs/
-            stage39_holdout_outputs/
+            stage40_outputs/
+            stage40_holdout_outputs/
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
