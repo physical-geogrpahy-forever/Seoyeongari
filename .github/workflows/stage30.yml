@@ -1,10 +1,10 @@
-name: Stage35B exact water balance with Hayashi storage-area
+name: Stage35C exact water-balance hydro-ecology
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage35b:
+  run-stage35c:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -14,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 35B
-        run: python stage35b_mass_balance_hayashi.py
+      - name: Run Stage 35C
+        run: python stage35c_mass_balance_state_operator.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage35b_outputs/stage35b_summary.json ]; then cat stage35b_outputs/stage35b_summary.json; fi
+          if [ -f stage35c_outputs/stage35c_summary.json ]; then cat stage35c_outputs/stage35c_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage35b-results
-          path: stage35b_outputs/
+          name: stage35c-results
+          path: stage35c_outputs/
           retention-days: 30
