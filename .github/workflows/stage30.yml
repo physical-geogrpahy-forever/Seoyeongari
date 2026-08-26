@@ -1,4 +1,4 @@
-name: Stage31C hydroperiod-state calibration
+name: Stage31C consistent calibration
 on:
   push:
     branches: [chatgpt-stage30-20260826]
@@ -6,7 +6,7 @@ on:
     branches: [main]
   workflow_dispatch:
 jobs:
-  run-stage31c:
+  run-stage31c-fast:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -16,16 +16,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 31C hydroperiod-state screen
-        run: python stage31c_exposure_state.py
+      - name: Run fast sign-consistent Stage 31C screen
+        run: python stage31c_fast_consistent.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage31c_outputs/stage31c_summary.json ]; then cat stage31c_outputs/stage31c_summary.json; fi
+          if [ -f stage31c_fast_outputs/stage31c_fast_summary.json ]; then cat stage31c_fast_outputs/stage31c_fast_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage31c-results
-          path: stage31c_outputs/
+          name: stage31c-fast-results
+          path: stage31c_fast_outputs/
           retention-days: 30
