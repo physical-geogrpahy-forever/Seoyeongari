@@ -1,24 +1,31 @@
-name: Stage37 groundwater-loss hydro-ecology
+name: Stage37R strict refinement and holdout
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage37:
+  run-stage37r:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage 37
-        run: python stage37_groundwater_loss.py
-      - name: Show summary
-        run: cat stage37_outputs/stage37_summary.json
+      - name: Run strict Stage 37R refinement
+        run: python stage37r_strict_refinement.py
+      - name: Show locked training summary
+        run: cat stage37r_outputs/stage37r_summary.json
+      - name: Run 2022 holdout only after lock
+        run: python stage37r_holdout_2022.py
+      - name: Show holdout summary
+        run: cat stage37r_holdout_outputs/stage37r_holdout_2022.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage37-results
-          path: stage37_outputs/
+          name: stage37r-strict-results
+          path: |
+            stage37r_outputs/
+            stage37r_holdout_outputs/
+            EGHM_STRICT_MODEL_RULES.md
           retention-days: 30
