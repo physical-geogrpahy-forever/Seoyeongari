@@ -10,6 +10,8 @@ from __future__ import annotations
 EVAL_YEARS=(2013,2015,2017,2019,2021,2023)
 HOLDOUT_YEAR=2022
 MASS_TOL_M3=1e-8
+AREA_PARTITION_TOL_M2=1e-8
+PRECIP_PARTITION_TOL_M3=1e-8
 NRMSE_MAX_PCT=2.0
 LOOCV_NRMSE_MAX_PCT=2.0
 STATE_YEAR_CORR_MAX=0.99
@@ -24,6 +26,8 @@ REQUIRED_CONTRACT={
     '2022_fit':False,
     'a2011_hard_max':False,
     'spring_dry_selection_requirement':False,
+    'domain_double_count':False,
+    'rainfall_partition_exact':True,
 }
 
 def contract_reasons(contract:dict)->list[str]:
@@ -54,6 +58,10 @@ def candidate_reasons(candidate:dict, grids:dict[str,list[float]], contract:dict
     r=contract_reasons(contract)
     if float(candidate.get('max_mass_error_m3',float('inf')))>MASS_TOL_M3:
         r.append('mass_balance')
+    if float(candidate.get('max_area_partition_error_m2',float('inf')))>AREA_PARTITION_TOL_M2:
+        r.append('spatial_area_partition')
+    if float(candidate.get('max_precip_partition_error_m3',float('inf')))>PRECIP_PARTITION_TOL_M3:
+        r.append('precipitation_partition')
     if float(candidate.get('nrmse',float('inf')))>NRMSE_MAX_PCT:
         r.append('nrmse>2pct')
     if float(candidate.get('loocv_nrmse',float('inf')))>LOOCV_NRMSE_MAX_PCT:
