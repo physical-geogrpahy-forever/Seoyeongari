@@ -9,23 +9,20 @@ OUT=Path('stage34_outputs'); OUT.mkdir(exist_ok=True)
 YEARS=np.array(sorted(OBS),int); Y=np.array([OBS[int(y)] for y in YEARS],float)
 A0=2241.762
 # Literature-constrained constants:
-# - linear exposure response (no fitted power transform)
-# - 28 d establishment lag (drawdown colonisation is demonstrably rapid on ~weeks scale)
-# - persistent colonisation over 2011-2023; no annual decay fitted because Seoyeongari evidence is terrestrialisation/peat accumulation
-# - 14 d antecedent runoff anomaly for short-term response; Jeju temporary wetlands respond within hours and temporary-pond literature supports 1-15 d rainfall windows
+# (1) linear exposure response: no fitted power transform;
+# (2) 28 d establishment lag: drawdown colonisation occurs on weeks scale;
+# (3) persistent exposure/colonisation state: consistent with observed Seoyeongari terrestrialisation/peat accumulation;
+# (4) 14 d antecedent runoff anomaly: Jeju temporary wetlands respond to rainfall within hours,
+#     while temporary-pond studies explicitly support a 1-15 d rainfall response component.
 LAG=28; RUNOFF_WINDOW=14
-
-# Broader TOPMODEL wetness-proxy grid. These parameters shape hydrologic exposure only; output is never treated as absolute pond area.
-M_AREA=[.5,.65,.8,1.0,1.2,1.5,1.8,2.2]
-Q0=[32,48,64,80,96,128,160]
-M_Q=[.4,.5,.6,.8,1.0,1.2,1.5]
-LOCAL=[.1,.2,.3]
-FAST=[.5,.75]
-TAUF=[30.,60.,120.]
-TAUS=[365.,730.]
+# Process settings retained from Stage33. They are NOT re-tuned here, to avoid using extra hydrologic degrees of freedom.
+LOCAL_FRAC=.20; FAST_FRAC=.75; TAU_FAST=60.; TAU_SLOW=365.
+# Only the three TOPMODEL wetness-response parameters are screened.
+M_AREA=[.4,.5,.6,.7,.8,.9,1.0,1.1,1.2,1.35,1.5,1.7,2.0,2.3]
+Q0=[24,32,40,48,56,64,80,96,112,128,160,192]
+M_Q=[.3,.4,.5,.6,.7,.8,.9,1.0,1.2,1.5,1.8]
 
 def fit_sign(X,y):
-    # Physical anchor fixed to 2011 observed open-water area.
     target=y-A0; cand=[]
     b=np.linalg.lstsq(X,target,rcond=None)[0]
     if b[0]<=0 and b[1]>=0: cand.append(b)
@@ -49,14 +46,11 @@ def main():
     ref=float(roll[(fyr==2011)&np.isin(fmo,[5,6])].mean())
     H=np.array([float((roll-ref)[(fyr==y)&np.isin(fmo,[5,6])].mean()) for y in YEARS])
     rows=[]
-    total=0
-    for ma,q0,mq,lf,ff,tf,ts in itertools.product(M_AREA,Q0,M_Q,LOCAL,FAST,TAUF,TAUS):
-        # avoid clearly redundant combinations only; no result-based pruning
-        p={'m_area':ma,'q0':q0,'m_q':mq,'local_frac':lf,'fast_frac':ff,'tau_fast':tf,'tau_slow':ts}
+    for ma,q0,mq in itertools.product(M_AREA,Q0,M_Q):
+        p={'m_area':ma,'q0':q0,'m_q':mq,'local_frac':LOCAL_FRAC,'fast_frac':FAST_FRAC,'tau_fast':TAU_FAST,'tau_slow':TAU_SLOW}
         rr,d=sim(F,p,True); ar=d.area_m2.to_numpy(float); dt=pd.to_datetime(d.date); yr=dt.dt.year.to_numpy(); mo=dt.dt.month.to_numpy()
-        deficit=np.maximum(0.0,(A0-ar)/A0)  # LINEAR, reference-constrained
+        deficit=np.maximum(0.0,(A0-ar)/A0)
         lagged=np.r_[np.zeros(LAG),deficit[:-LAG]]
-        # persistent causal exposure integral; no flood-reversal coefficient is fitted because this term was unidentifiable in Stage33
         state=np.cumsum(lagged/365.0)
         S=np.array([float(state[(yr==y)&np.isin(mo,[5,6])].mean()) for y in YEARS])
         X=np.c_[S,H]
@@ -66,18 +60,13 @@ def main():
                      'k_colonization_m2_per_state':-b[0],'k_runoff_m2_per_mm':b[1],'raw_topmodel_nrmse':rr['nrmse'],
                      **{f'pred_{y}':pred[j] for j,y in enumerate(YEARS)},**{f'cv_{y}':cvp[j] for j,y in enumerate(YEARS)},
                      **{f'state_{y}':S[j] for j,y in enumerate(YEARS)},**{f'runoff_anom_{y}':H[j] for j,y in enumerate(YEARS)}})
-        total+=1
     feasible=[r for r in rows if r['nrmse']<=1.2 and r['k_colonization_m2_per_state']>=0 and r['k_runoff_m2_per_mm']>=0]
-    if feasible:
-        chosen=sorted(feasible,key=lambda r:(r['loocv_nrmse'],r['nrmse']))[0]
-    else:
-        chosen=sorted(rows,key=lambda r:(r['nrmse'],r['loocv_nrmse']))[0]
+    chosen=sorted(feasible,key=lambda r:(r['loocv_nrmse'],r['nrmse']))[0] if feasible else sorted(rows,key=lambda r:(r['nrmse'],r['loocv_nrmse']))[0]
     pd.DataFrame(sorted(rows,key=lambda r:r['nrmse'])[:300]).to_csv(OUT/'accuracy_top300.csv',index=False)
     pd.DataFrame(sorted(feasible,key=lambda r:(r['loocv_nrmse'],r['nrmse']))[:300]).to_csv(OUT/'feasible_cv_top300.csv',index=False)
-    summary={'model':'Stage34 reference-constrained parsimonious hydro-ecology','selection':'if nRMSE<=1.2, minimize LOOCV','n_candidates':total,'n_feasible':len(feasible),'best':chosen,
-             'fixed_reference_constraints':{'exposure_power':1.0,'establishment_lag_days':LAG,'annual_memory':1.0,'runoff_window_days':RUNOFF_WINDOW,'flood_reversal':'not fitted; unidentifiable in Stage33'},
-             'rules':{'lambda':0,'explicit_time':False,'future_leakage':False,'hard_cap':False,'freeboard':False,'A2011_fixed_anchor_m2':A0,
-                      'colonization_sign':'negative effect on open water','runoff_sign':'positive effect on open water','TOPMODEL_role':'wetness/exposure proxy, not absolute pond area'},
+    summary={'model':'Stage34 reference-constrained parsimonious hydro-ecology','selection':'among nRMSE<=1.2%, minimize LOOCV nRMSE','n_candidates':len(rows),'n_feasible':len(feasible),'best':chosen,
+             'fixed_reference_constraints':{'exposure_power':1.0,'establishment_lag_days':LAG,'annual_memory':1.0,'runoff_window_days':RUNOFF_WINDOW,'local_frac':LOCAL_FRAC,'fast_frac':FAST_FRAC,'tau_fast_d':TAU_FAST,'tau_slow_d':TAU_SLOW,'flood_reversal':'not fitted because unidentifiable in Stage33'},
+             'rules':{'lambda':0,'explicit_time':False,'future_leakage':False,'hard_cap':False,'freeboard':False,'A2011_fixed_anchor_m2':A0,'colonization_sign':'reduces open water','runoff_sign':'increases open water','TOPMODEL_role':'wetness/exposure proxy only'},
              'benchmarks':{'Stage33_nrmse':1.0146033059223625,'Stage33_LOOCV':1.3324610253954587,'Stage33_power1_previous_nrmse':1.1416779996167894,'Stage33_power1_previous_LOOCV':1.4893474274843717}}
     (OUT/'stage34_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8'); print(json.dumps(summary,ensure_ascii=False,indent=2))
 if __name__=='__main__': main()
