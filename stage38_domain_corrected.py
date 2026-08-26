@@ -11,10 +11,12 @@ Stage38 partitions the domain exactly once each day:
   A_domain = A_upland + A_wet_nonopen(t) + A_open(t)
 where A_wet_nonopen=A_WET-A_open.
 
-The hydrologic processes otherwise remain the Stage37 family: exact daily
-storage accounting, causal return flow, continuous area-proportional Qgw,
-hydroperiod-driven ecology, no cap/freeboard/lambda/time trend, and 2022 absent
-from fitting/selection.
+Surface evaporation, linear surface drainage and area-proportional subsurface
+loss are evaluated from the same pre-loss surface state. If their combined
+potential loss exceeds available storage, all are reduced by the same factor;
+no arbitrary within-day loss priority is imposed.
+
+2022 is absent from fitting/selection.
 """
 import itertools,json
 from pathlib import Path
@@ -37,7 +39,6 @@ C_UPLAND=SOIL_DEPTH*A_UPLAND
 C_WET=SOIL_DEPTH*A_WET
 LAG=28
 
-# Broad enough to re-establish the optimum after fixing the flux footprint.
 GRIDS={
  'V0':[1000.,1600.,2200.],
  'p_shape':[6.,12.,18.],
@@ -52,17 +53,16 @@ CONTRACT={
  'lambda':0,'hard_cap':False,'freeboard':False,'explicit_time':False,
  'future_leakage':False,'2022_fit':False,'a2011_hard_max':False,
  'spring_dry_selection_requirement':False,'domain_double_count':False,
- 'rainfall_partition_exact':True,
+ 'rainfall_partition_exact':True,'surface_loss_priority':False,
 }
 
 def hydro(F,p):
     pre=np.asarray(F['pre'],float);eto=np.asarray(F['eto'],float);ep=np.asarray(F['ep'],float);dt=pd.to_datetime(F['date']);n=len(pre)
     su=.5*C_UPLAND;sw=.5*C_WET;fast=slow=0.;surf=p['V0'];prev=su+sw+fast+slow+surf
-    area=np.empty(n);V=np.empty(n);qret=np.empty(n);qgw=np.empty(n);qout=np.empty(n)
+    area=np.empty(n);V=np.empty(n);qret=np.empty(n);qgw=np.empty(n);qout=np.empty(n);qev=np.empty(n)
     maxerr=max_area_err=max_p_err=0.
     for i in range(n):
         ap=area_v(surf,p['V0'],p['p_shape']);aw=max(A_WET-ap,0.)
-        # Exact, non-overlapping spatial partition of rainfall footprint.
         pup=pre[i]*A_UPLAND/1000.;pwet=pre[i]*aw/1000.;popen=pre[i]*ap/1000.
         area_err=abs((A_UPLAND+aw+ap)-A_DOMAIN);max_area_err=max(max_area_err,area_err)
         p_err=abs((pup+pwet+popen)-pre[i]*A_DOMAIN/1000.);max_p_err=max(max_p_err,p_err)
@@ -72,15 +72,23 @@ def hydro(F,p):
         local=dex*p['local_frac'];deep=dex-local;fast+=local*FAST_FRAC;slow+=local*(1-FAST_FRAC)
         qf=min(fast,fast/p['tau_fast']);qs=min(slow,slow/TAU_SLOW);fast-=qf;slow-=qs;qr=qf+qs
         surf+=popen+dw+qr
-        # Surface evaporation uses only the current open-water footprint.
-        ap2=area_v(surf,p['V0'],p['p_shape']);eo=min(surf,ep[i]*ap2/1000.);surf-=eo
-        qo=min(surf,surf/p['tau_surf']);surf-=qo
-        ag=area_v(surf,p['V0'],p['p_shape']);qg=min(surf,p['k_gw_mm_d']*ag/1000.);surf-=qg
+
+        # All same-day surface losses are evaluated from one common pre-loss state.
+        aloss=area_v(surf,p['V0'],p['p_shape'])
+        eo_p=ep[i]*aloss/1000.
+        qo_p=surf/p['tau_surf']
+        qg_p=p['k_gw_mm_d']*aloss/1000.
+        loss_p=eo_p+qo_p+qg_p
+        fac=min(1.0,surf/loss_p) if loss_p>0 else 1.0
+        eo=eo_p*fac;qo=qo_p*fac;qg=qg_p*fac
+        surf-=eo+qo+qg
+        if surf<0 and surf>-1e-12:surf=0.
+
         an=area_v(surf,p['V0'],p['p_shape'])
         total=su+sw+fast+slow+surf;inputs=pup+pwet+popen;outputs=e1+e2+eo+deep+qo+qg
         err=prev+inputs-outputs-total;maxerr=max(maxerr,abs(err));prev=total
-        area[i]=an;V[i]=surf;qret[i]=qr;qgw[i]=qg;qout[i]=qo
-    return {'dates':dt,'area':area,'V':V,'return_flow':qret,'groundwater_loss':qgw,'surface_outflow':qout,
+        area[i]=an;V[i]=surf;qret[i]=qr;qgw[i]=qg;qout[i]=qo;qev[i]=eo
+    return {'dates':dt,'area':area,'V':V,'return_flow':qret,'groundwater_loss':qgw,'surface_outflow':qout,'surface_evaporation':qev,
             'mass_error':maxerr,'area_partition_error':max_area_err,'precip_partition_error':max_p_err}
 
 def state(area,r):
@@ -144,15 +152,13 @@ def main():
     diag=None
     if chosen:
         h=hydros[tuple(chosen[k] for k in hk)];diag=zero_diag(h['dates'],h['V'])
-    # Also preserve best rule-rejected candidates so failure is diagnosable without relaxing gates.
     ranked=sorted(rows,key=lambda z:(len(z['reject_reasons'].split(';')) if z['reject_reasons'] else 0,z['loocv_nrmse'],z['nrmse']))
     out={'model':'Stage38 domain-corrected exact-water-balance hydro-ecology','n_candidates':len(rows),'n_strict_pass':len(passed),'selected':chosen,
          'selected_zero_storage_diagnostics':diag,
          'geometry':{'A0_m2':A0,'A_ext_outside_2011_m2':A_EXT_2011,'A_wet_footprint_m2':A_WET,'A_wet_margin_2011_m2':A_WET_MARGIN_2011,
                      'A_upland_nonoverlap_m2':A_UPLAND,'A_domain_component_sum_m2':A_DOMAIN,'raster_total_reference_m2':A_RASTER_TOTAL_REFERENCE,
                      'vector_raster_area_difference_m2':A_DOMAIN-A_RASTER_TOTAL_REFERENCE},
-         'grids':GRIDS,'contract':CONTRACT,'holdout_2022_used':False,
-         'best_rejected_preview':ranked[:5]}
+         'grids':GRIDS,'contract':CONTRACT,'holdout_2022_used':False,'best_rejected_preview':ranked[:5]}
     pd.DataFrame(rows).sort_values(['strict_pass','loocv_nrmse','nrmse'],ascending=[False,True,True]).head(3000).to_csv(OUT/'stage38_candidates.csv',index=False)
     (OUT/'stage38_summary.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(out,ensure_ascii=False,indent=2))
     if not chosen:raise SystemExit('NO STRICT-PASS CANDIDATE: preserve rules; diagnose/expand structure')
