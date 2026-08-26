@@ -1,12 +1,12 @@
-name: Stage32 reference-based coupled wetland model
+name: Stage33 causal hydro-ecology model
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage32:
+  run-stage33:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 32 coupled hydrology-ecology model
-        run: python stage32_wetmat_vandervalk.py
+      - name: Run Stage 33 causal hydro-ecology calibration
+        run: python stage33_causal_hydroeco.py
       - name: Show compact summary
         if: always()
         run: |
-          if [ -f stage32_outputs/stage32_summary.json ]; then cat stage32_outputs/stage32_summary.json; fi
+          if [ -f stage33_outputs/stage33_summary.json ]; then cat stage33_outputs/stage33_summary.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage32-results
-          path: stage32_outputs/
+          name: stage33-results
+          path: stage33_outputs/
           retention-days: 30
