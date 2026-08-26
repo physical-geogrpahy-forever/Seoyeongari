@@ -14,6 +14,7 @@ AREA_PARTITION_TOL_M2=1e-8
 PRECIP_PARTITION_TOL_M3=1e-8
 NRMSE_MAX_PCT=2.0
 LOOCV_NRMSE_MAX_PCT=2.0
+NESTED_LOOCV_NRMSE_MAX_PCT=2.0
 STATE_YEAR_CORR_MAX=0.99
 ZERO_TOL=1e-12
 
@@ -29,6 +30,8 @@ REQUIRED_CONTRACT={
     'domain_double_count':False,
     'rainfall_partition_exact':True,
     'surface_loss_priority':False,
+    'nested_cv_selection':True,
+    'hyperparameter_holdout_leakage':False,
 }
 
 def contract_reasons(contract:dict)->list[str]:
@@ -39,11 +42,6 @@ def contract_reasons(contract:dict)->list[str]:
     return r
 
 def grid_boundary_reasons(candidate:dict, grids:dict[str,list[float]])->list[str]:
-    """Reject calibrated search parameters at a tested grid edge.
-
-    Edge hits are evidence that the optimum may lie outside the tested domain;
-    the correct response is to expand/refine the domain, not accept the value.
-    """
     r=[]
     for k,vals in grids.items():
         if k not in candidate or len(vals)<3:
@@ -55,7 +53,8 @@ def grid_boundary_reasons(candidate:dict, grids:dict[str,list[float]])->list[str
 
 def candidate_reasons(candidate:dict, grids:dict[str,list[float]], contract:dict,
                       *, require_new_process:str|None=None,
-                      require_short_hydro:bool=True)->list[str]:
+                      require_short_hydro:bool=True,
+                      require_nested_score:bool=False)->list[str]:
     r=contract_reasons(contract)
     if float(candidate.get('max_mass_error_m3',float('inf')))>MASS_TOL_M3:
         r.append('mass_balance')
@@ -66,7 +65,9 @@ def candidate_reasons(candidate:dict, grids:dict[str,list[float]], contract:dict
     if float(candidate.get('nrmse',float('inf')))>NRMSE_MAX_PCT:
         r.append('nrmse>2pct')
     if float(candidate.get('loocv_nrmse',float('inf')))>LOOCV_NRMSE_MAX_PCT:
-        r.append('loocv_nrmse>2pct')
+        r.append('candidate_loocv_nrmse>2pct')
+    if require_nested_score and float(candidate.get('nested_loocv_nrmse',float('inf')))>NESTED_LOOCV_NRMSE_MAX_PCT:
+        r.append('nested_selection_loocv_nrmse>2pct')
     if abs(float(candidate.get('state_year_corr',1.0)))>=STATE_YEAR_CORR_MAX:
         r.append('state_year_corr>=0.99')
     kc=float(candidate.get('K_colonizable_m2',0.0))
