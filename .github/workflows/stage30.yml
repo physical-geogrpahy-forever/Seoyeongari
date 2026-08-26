@@ -1,10 +1,10 @@
-name: Stage35F storage-area coupled hydro-ecology
+name: Stage36 hydroperiod-driven hydro-ecology
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage35f:
+  run-stage36:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -13,12 +13,12 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage 35F
-        run: python stage35f_storage_area_coupling.py
+      - name: Run Stage 36
+        run: python stage36_hydroperiod_state.py
       - name: Show summary
-        run: cat stage35f_outputs/stage35f_summary.json
+        run: cat stage36_outputs/stage36_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage35f-results
-          path: stage35f_outputs/
+          name: stage36-results
+          path: stage36_outputs/
           retention-days: 30
