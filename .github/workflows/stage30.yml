@@ -1,10 +1,10 @@
-name: Stage34 reference-constrained hydro-ecology
+name: Stage34 excluded-2022 holdout
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage34:
+  run-stage34-holdout:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -14,16 +14,16 @@ jobs:
           python-version: '3.11'
       - name: Install numerical dependencies
         run: pip install numpy pandas
-      - name: Run Stage 34 reference-constrained model
-        run: python stage34_reference_constrained.py
-      - name: Show compact summary
+      - name: Run locked Stage 34 holdout
+        run: python stage34_holdout_2022.py
+      - name: Show holdout summary
         if: always()
         run: |
-          if [ -f stage34_outputs/stage34_summary.json ]; then cat stage34_outputs/stage34_summary.json; fi
+          if [ -f stage34_holdout_outputs/stage34_holdout_2022.json ]; then cat stage34_holdout_outputs/stage34_holdout_2022.json; fi
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage34-results
-          path: stage34_outputs/
+          name: stage34-holdout-2022
+          path: stage34_holdout_outputs/
           retention-days: 30
