@@ -1,10 +1,10 @@
-name: Stage37R strict refinement and holdout
+name: Stage38 domain-corrected strict model
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage37r:
+  run-stage38:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -13,19 +13,24 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run strict Stage 37R refinement
-        run: python stage37r_strict_refinement.py
+      - name: Run strict Stage 38 domain-corrected model
+        run: python stage38_domain_corrected.py
       - name: Show locked training summary
-        run: cat stage37r_outputs/stage37r_summary.json
-      - name: Run 2022 holdout only after lock
-        run: python stage37r_holdout_2022.py
+        if: always()
+        run: cat stage38_outputs/stage38_summary.json || true
+      - name: Run 2022 holdout only after strict lock
+        if: success()
+        run: python stage38_holdout_2022.py
       - name: Show holdout summary
-        run: cat stage37r_holdout_outputs/stage37r_holdout_2022.json
+        if: success()
+        run: cat stage38_holdout_outputs/stage38_holdout_2022.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: stage37r-strict-results
+          name: stage38-strict-results
           path: |
-            stage37r_outputs/
-            stage37r_holdout_outputs/
+            stage38_outputs/
+            stage38_holdout_outputs/
             EGHM_STRICT_MODEL_RULES.md
+          if-no-files-found: warn
           retention-days: 30
