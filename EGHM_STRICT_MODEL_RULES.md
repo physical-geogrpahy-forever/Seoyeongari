@@ -22,3 +22,7 @@ These rules are non-negotiable. A lower RMSE never overrides a failed rule.
 18. **Holdout order is irreversible**: lock the candidate first, write it to output, then run 2022 holdout in a separate step. Never return to tuning because of the 2022 result.
 19. **Literature-supported structure, site-calibrated parameters**: distinguish a process supported by literature from a parameter actually measured at Seoyeongari. Do not label calibrated values as measured.
 20. **Report order** after substantive runs: RMSE and nRMSE first, then LOOCV, water-balance error, rule-gate result, year-wise predictions, and diagnostics.
+21. **No spatial double counting**: every square metre of the modeled hydrologic domain must belong to exactly one precipitation/ET footprint on each day. Overlapping upland + wetland/open-water forcing domains are forbidden.
+22. **Area partition closure**: the daily non-overlapping area components must sum to the fixed modeled domain within 1e-8 m2. Failure rejects the model even when volumetric mass residual is zero.
+23. **Precipitation partition closure**: the sum of rainfall volumes assigned to the daily area components must equal precipitation depth times the modeled domain within 1e-8 m3. Algebraically closed but spatially double-counted models are invalid.
+24. **Geometry bookkeeping is not calibration**: the 2011 pond, external contributing area and potential wetland footprint must be reconciled explicitly. Small vector/raster area discrepancies are reported, not tuned away to improve fit.
