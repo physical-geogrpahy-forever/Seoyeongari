@@ -1,44 +1,44 @@
-name: Stage77 peat-forming area feedback
+name: Stage78 cumulative-exposure four-scenario comparison
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage77:
+  stage78:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage77 peat-forming area feedback test
-        run: python stage77_peat_forming_area_feedback.py
+      - name: Run Stage78 four-scenario comparison
+        run: python stage78_cumulative_exposure_four_scenarios.py
       - name: Show summary
-        run: cat stage77_outputs/stage77_summary.json
+        run: cat stage78_outputs/stage78_summary.json
       - name: Enforce data and physical contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage77_outputs/stage77_summary.json').read_text())
-          if d.get('status') != 'PASS_STAGE77_PEAT_FORMING_AREA_FEEDBACK_TEST': raise SystemExit('Stage77 failed')
+          d=json.loads(pathlib.Path('stage78_outputs/stage78_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE78_CUMULATIVE_EXPOSURE_FOUR_SCENARIO_COMPARISON': raise SystemExit('Stage78 failed')
           if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
-          if d.get('local_wet_peat_rate_changed') is not False: raise SystemExit('local peat rate must remain fixed')
-          if d.get('conserved_hydrology_changed') is not False: raise SystemExit('Stage77 must not alter conserved hydrology')
           if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
-          # Mode ranking and accuracy are scientific outputs only.
+          # Scenario rank, AICc and LOOCV are reported outputs only.
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage77-${{ matrix.os }}
+          name: stage78-${{ matrix.os }}
           path: |
-            stage77_outputs/
+            stage78_outputs/
+            stage78_cumulative_exposure_four_scenarios.py
             stage77_peat_forming_area_feedback.py
+            STAGE76_77_FEEDBACK_DECISION_LOG.md
             STAGE75_ET_FEEDBACK_DECISION_LOG.md
             STAGE73_74_ECO_RULE_DECISION_LOG.md
             eghm_deterministic_scenarios.py
