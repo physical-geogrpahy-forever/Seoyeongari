@@ -4,7 +4,7 @@
 Two sensitivity questions are intentionally separated:
 
 A. FIXED-COEFFICIENT OAT (primary robustness test)
-   The central field-median peat-rate four-scenario observation-operator
+   The central field-derived peat-rate four-scenario observation-operator
    coefficients are locked once. One hydrologic/ecological process parameter is
    then changed at a time. No Kc/Kh refitting is allowed. This asks whether the
    *locked model* and scenario ranking are robust.
@@ -17,9 +17,10 @@ B. PROFILE-REFIT OAT (secondary calibration diagnostic)
 The tested values are the Stage45/49 admissible calibration-search values,
 excluding outer guard values. They are not relabelled as independently measured
 physical ranges. The central persistent peat rate is inherited from Stage51 as
-the median of independently field-confirmed long-term persistent peat accretion
-values (0.29, 0.38, 0.47 mm/yr), not selected by pond-area fitting. Peat-rate
-sensitivity itself was handled separately in Stage51.
+the Seoyeongari field-report Clymo-model central estimate 0.38 mm/yr from the
+reported 0.29/0.38/0.47 mm/yr lower/central/upper long-term estimates, not
+selected by pond-area fitting. Peat-rate sensitivity itself was handled
+separately in Stage51.
 
 No criterion favors Integrated. Scenario rank is always an output.
 """
@@ -71,8 +72,8 @@ PROVENANCE = [
      'Trailing window used to form the return-flow anomaly H; H has units m3.'),
     ('est_window_d', 7, 'day', 'process timing parameter within literature-bounded search',
      'Minimum continuous antecedent exposure window used to create recruitment pressure.'),
-    ('peat_rate_persistent', PEAT_RATE, 'mm yr-1', 'field-confirmed long-term persistent-rate median',
-     'Median of independently field-confirmed long-term persistent peat accretion values 0.29, 0.38 and 0.47 mm/yr; not selected by pond-area fit optimization.'),
+    ('peat_rate_persistent', PEAT_RATE, 'mm yr-1', 'field-derived Clymo-model long-term central estimate',
+     'Central estimate in the Seoyeongari field report: lower/central/upper long-term values 0.29/0.38/0.47 mm/yr; not three independent replicates and not selected by pond-area fit optimization.'),
     ('K_colonizable_integrated', 1835.7764495736299, 'm2', 'calibrated observation-operator area scale',
      'Maps dimensionless ecological occupation state S to open-water area effect; fitted to six observed years.'),
     ('K_hydro_integrated', 0.006134764828277183, 'm-1', 'calibrated observation-operator hydrologic scale',
@@ -202,7 +203,7 @@ def main():
     bdf=pd.DataFrame(byp)
     bdf.to_csv(OUT/'stage52_oat_integrated_rank_by_parameter.csv',index=False)
 
-    # Central metrics from the locked field-median peat-rate configuration.
+    # Central metrics from the locked field-derived 0.38 mm/yr configuration.
     central=[]
     for name,b in central_coeff.items():
         pred=predict_with_coeff(name,S0,H0,G0,b['Kc'],b['Kh'])
@@ -215,8 +216,8 @@ def main():
         'observed_area_years':[int(y) for y in m.YEARS],
         'pond_area_observation_2022':'ABSENT',
         'persistent_peat_rate_mm_yr':PEAT_RATE,
-        'persistent_peat_rate_reference_statistic':'median of independently field-confirmed long-term values',
-        'field_confirmed_persistent_rates_mm_yr':list(s51.FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR),
+        'persistent_peat_rate_reference_statistic':'field-derived Clymo-model central estimate',
+        'field_clymo_long_term_lower_central_upper_mm_yr':list(s51.FIELD_CLYMO_LONG_TERM_RATES_MM_YR),
         'sensitivity_primary':'fixed observation-operator coefficients; one process parameter changed at a time',
         'sensitivity_secondary':'profile-refit Kc/Kh; calibration diagnostic only',
         'oat_values_source':'Stage45/49 admissible calibration-search values after removing explicit outer guards; not independent measurement ranges',
