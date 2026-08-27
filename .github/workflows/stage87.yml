@@ -1,0 +1,30 @@
+name: Stage87 pond loss contract ablation
+on:
+  push:
+    branches: [chatgpt-stage30-20260826]
+    paths: ['stage87_pond_loss_contract_ablation.py','.github/workflows/stage87.yml']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install numpy pandas mpmath
+      - run: python stage87_pond_loss_contract_ablation.py
+      - name: Contract checks
+        run: |
+          python - <<'PY'
+          import json, pandas as pd
+          a=json.load(open('stage87_outputs/stage87_audit.json'))
+          assert a['status']=='PASS_STAGE87_POND_CONTRACT_ABLATION'
+          assert a['parameter_fitting'] is False and a['catchment_structure_changed'] is False
+          assert a['max_mass_error_m3'] < 1e-8
+          s=pd.read_csv('stage87_outputs/stage87_summary.csv')
+          assert len(s)==5
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage87-pond-contract-ablation
+          path: stage87_outputs/
