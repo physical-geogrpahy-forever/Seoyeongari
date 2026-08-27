@@ -1,53 +1,54 @@
-name: Stage55 observation-window robustness audit
+name: Stage56 April-May metadata-aligned recalibration
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage55:
+  run-stage56:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage55 temporal-support audit
-        run: python stage55_observation_window_robustness.py
-      - name: Show Stage55 summary
+      - name: Run Stage56 April-May recalibration
+        run: python stage56_aprmay_recalibration.py
+      - name: Show Stage56 summary
         if: always()
-        run: cat stage55_outputs/stage55_summary.json || true
-      - name: Enforce physical and data contract only
+        run: cat stage56_outputs/stage56_summary.json || true
+      - name: Enforce unchanged Stage49 contract
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage55_outputs/stage55_summary.json')
+          p=pathlib.Path('stage56_outputs/stage56_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_STAGE55_TEMPORAL_SUPPORT_AUDIT':
-              raise SystemExit('Stage55 temporal-support audit failed')
-          if d.get('pond_area_observation_2022') != 'ABSENT':
-              raise SystemExit('2022 pond-area observation must be absent')
-          if d.get('window_selection_used_for_acceptance_or_optimization') is not False:
-              raise SystemExit('Window ranking must not be an acceptance/optimization gate')
-          wb=d.get('physical_closure',{})
-          if max(wb.values()) > 1e-8:
+          if d.get('status') != 'PASS_SIX_OBSERVATION_CALIBRATION':
+              raise SystemExit('Stage56 calibration did not produce a valid candidate')
+          if d.get('pond_area_observation_2022') != 'ABSENT_NOT_HOLDOUT':
+              raise SystemExit('2022 pond-area observation must remain absent')
+          if d.get('evaluation_window_selected_by_fit') is not False:
+              raise SystemExit('April-May window must be metadata-selected, not fit-selected')
+          if d.get('parameter_grids_changed_from_stage49') is not False:
+              raise SystemExit('Stage49 grids must remain unchanged')
+          if d.get('physical_process_structure_changed_from_stage49') is not False:
+              raise SystemExit('Stage49 process structure must remain unchanged')
+          sel=d.get('selected') or {}
+          if max(sel.get('max_mass_error_m3',1),sel.get('max_area_partition_error_m2',1),sel.get('max_precip_partition_error_m3',1)) > 1e-8:
               raise SystemExit('physical closure failed')
-          # Window/scenario ranking is output only. Exact acquisition dates override fit ranking if recovered.
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage55-observation-window-robustness
+          name: stage56-aprmay-recalibration
           path: |
-            stage55_outputs/
-            stage55_observation_window_robustness.py
-            stage54_hidden_constant_robustness.py
-            stage52_oat_provenance.py
-            stage51_persistent_peat_sensitivity.py
-            stage50_four_scenario_peat_sensitivity.py
+            stage56_outputs/
+            stage56_aprmay_recalibration.py
+            stage49_six_observation_irreversible_recruitment.py
+            stage38_domain_corrected.py
+            STAGE55_DECISION_LOG.md
             EGHM_REFERENCE_LEDGER_SUPPLEMENT_08.md
-            STAGE54_DECISION_LOG.md
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
