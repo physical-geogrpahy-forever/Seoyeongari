@@ -105,27 +105,17 @@ def best_row(rows):return min(rows,key=lambda z:(z['met']['nRMSE_pct'],z.get('be
 
 
 def scenario_full(h,H,peat_rate):
-    # Baseline
     off0=[A0]*len(Y);kh0,p0,m0=fit_offset(off0,H)
-
-    # Hydrosere cumulative exposure
     rh,ch=beta_candidates_hydrosere(h,H);bh=best_row(rh)
-
-    # Eco-Geo uniform local wet-peat expression
     Gwet,_,_=peat_geomorphic_loss(h['dates'],h['V'],peat_rate,SELECTED_STRUCTURE['V0'],SELECTED_STRUCTURE['p_shape'])
     Ga=annual_support(h['dates'],Gwet,EVAL_YEARS,OBS_MONTHS)
     offg=[A0-g for g in Ga];khg,pg,mg=fit_offset(offg,H)
-
-    # Integrated causal area-partition ecology-peat coupling
     ri,ci=beta_candidates_integrated(h,H,Gwet);bi=best_row(ri)
-
     rows=[
       {'Scenario':'Baseline Model','beta_D_m2_per_exposure_yr':None,'K_hydro_m2_per_m3':kh0,'pred':p0,**m0,'AICc':metric_aicc(m0,1)},
-      {'Scenario':'Hydrosere Only Model','beta_D_m2_per_exposure_yr':bh['beta'],'K_hydro_m2_per_m3':bh['Kh'],'pred':bh['pred'],**bh['met'],'AICc':metric_aicc(bh['met'],2),
-       'Aterr_2023_m2':bh['At'][-1],'D_2023_exposure_yr':bh['D'][-1]},
+      {'Scenario':'Hydrosere Only Model','beta_D_m2_per_exposure_yr':bh['beta'],'K_hydro_m2_per_m3':bh['Kh'],'pred':bh['pred'],**bh['met'],'AICc':metric_aicc(bh['met'],2),'Aterr_2023_m2':bh['At'][-1],'D_2023_exposure_yr':bh['D'][-1]},
       {'Scenario':'Eco-Geo Only Model','beta_D_m2_per_exposure_yr':None,'K_hydro_m2_per_m3':khg,'pred':pg,**mg,'AICc':metric_aicc(mg,1),'G_2023_m2':Ga[-1]},
-      {'Scenario':'Integrated Model','beta_D_m2_per_exposure_yr':bi['beta'],'K_hydro_m2_per_m3':bi['Kh'],'pred':bi['pred'],**bi['met'],'AICc':metric_aicc(bi['met'],2),
-       'Aterr_2023_m2':bi['At'][-1],'D_2023_exposure_yr':bi['D'][-1],'G_2023_m2':bi['G'][-1],'peat_forming_fraction_2023':bi['Fp'][-1]},
+      {'Scenario':'Integrated Model','beta_D_m2_per_exposure_yr':bi['beta'],'K_hydro_m2_per_m3':bi['Kh'],'pred':bi['pred'],**bi['met'],'AICc':metric_aicc(bi['met'],2),'Aterr_2023_m2':bi['At'][-1],'D_2023_exposure_yr':bi['D'][-1],'G_2023_m2':bi['G'][-1],'peat_forming_fraction_2023':bi['Fp'][-1]},
     ]
     rank={z['Scenario']:i+1 for i,z in enumerate(sorted(rows,key=lambda z:(z['nRMSE_pct'],z['RMSE_m2'],z['Scenario'])))}
     for z in rows:z['rank']=rank[z['Scenario']]
@@ -169,27 +159,24 @@ def main():
             zz={k:v for k,v in z.items() if k!='pred'};zz['peat_rate_mm_yr']=rate
             for i,y in enumerate(EVAL_YEARS):zz[f'pred_{y}']=z['pred'][i]
             allrows.append(zz)
-        sensitivity.append({'peat_rate_mm_yr':rate,'ranking':[z['Scenario'] for z in sorted(rows,key=lambda z:z['rank'])],
-                            'Integrated_nRMSE_pct':next(z['nRMSE_pct'] for z in rows if z['Scenario']=='Integrated Model'),
-                            'Hydrosere_nRMSE_pct':next(z['nRMSE_pct'] for z in rows if z['Scenario']=='Hydrosere Only Model')})
+        sensitivity.append({'peat_rate_mm_yr':rate,'ranking':[z['Scenario'] for z in sorted(rows,key=lambda z:z['rank'])],'Integrated_nRMSE_pct':next(z['nRMSE_pct'] for z in rows if z['Scenario']=='Integrated Model'),'Hydrosere_nRMSE_pct':next(z['nRMSE_pct'] for z in rows if z['Scenario']=='Hydrosere Only Model')})
         if abs(rate-CENTRAL_PEAT)<1e-12:central_cache=cache;central_rows=rows
 
     loocv={}
     for scen in ('Baseline Model','Hydrosere Only Model','Eco-Geo Only Model','Integrated Model'):
         rm,nr,ch=loocv_scenario(h,H,CENTRAL_PEAT,scen,central_cache);loocv[scen]={'RMSE_m2':rm,'nRMSE_pct':nr,'choices':ch}
 
+    # Scenario rows contain scenario-specific diagnostics, so construct a union
+    # schema instead of assuming the first (Baseline) row has every field.
+    fieldnames=[]
+    for row in allrows:
+        for key in row:
+            if key not in fieldnames:fieldnames.append(key)
     with (OUT/'stage78_all_scenarios.csv').open('w',newline='',encoding='utf-8') as f:
-        w=csv.DictWriter(f,fieldnames=list(allrows[0].keys()));w.writeheader();w.writerows(allrows)
+        w=csv.DictWriter(f,fieldnames=fieldnames,extrasaction='raise');w.writeheader();w.writerows(allrows)
 
     central=[{k:v for k,v in z.items() if k!='pred'} for z in sorted(central_rows,key=lambda z:z['rank'])]
-    result={'status':'PASS_STAGE78_CUMULATIVE_EXPOSURE_FOUR_SCENARIO_COMPARISON','pond_area_observation_2022':'ABSENT',
-            'observation_variable':'mapped open-water pond surface area','observation_support':'April-May',
-            'ecological_memory':'cumulative hydrologic exposure dose D; no abstract S/r_est/K_colonizable',
-            'central_peat_rate_mm_yr':CENTRAL_PEAT,'primary_peat_rates_mm_yr':PEAT_RATES,
-            'central_scenarios':central,'nested_LOOCV_central':loocv,'peat_sensitivity':sensitivity,
-            'AICc_parameter_count':{'Baseline Model':1,'Hydrosere Only Model':2,'Eco-Geo Only Model':1,'Integrated Model':2},
-            'peat_rate_counted_as_fitted_parameter':False,'scenario_rank_not_acceptance_gate':True,'loocv_not_acceptance_gate':True,
-            'physical_closure':{'mass_error_m3':h['mass_error'],'area_partition_error_m2':h['area_partition_error'],'precip_partition_error_m3':h['precip_partition_error']}}
+    result={'status':'PASS_STAGE78_CUMULATIVE_EXPOSURE_FOUR_SCENARIO_COMPARISON','pond_area_observation_2022':'ABSENT','observation_variable':'mapped open-water pond surface area','observation_support':'April-May','ecological_memory':'cumulative hydrologic exposure dose D; no abstract S/r_est/K_colonizable','central_peat_rate_mm_yr':CENTRAL_PEAT,'primary_peat_rates_mm_yr':PEAT_RATES,'central_scenarios':central,'nested_LOOCV_central':loocv,'peat_sensitivity':sensitivity,'AICc_parameter_count':{'Baseline Model':1,'Hydrosere Only Model':2,'Eco-Geo Only Model':1,'Integrated Model':2},'peat_rate_counted_as_fitted_parameter':False,'scenario_rank_not_acceptance_gate':True,'loocv_not_acceptance_gate':True,'physical_closure':{'mass_error_m3':h['mass_error'],'area_partition_error_m2':h['area_partition_error'],'precip_partition_error_m3':h['precip_partition_error']}}
     (OUT/'stage78_summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(result,ensure_ascii=False,indent=2))
 
 if __name__=='__main__':main()
