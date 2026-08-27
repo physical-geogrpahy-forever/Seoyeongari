@@ -1,17 +1,17 @@
-name: Stage60c full-build state forensics
+name: Stage61a area-power canonicalization test
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage60c:
+  stage61a:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
-        replica: [1, 2]
+        replica: [1, 2, 3]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 15
     env:
       REPLICA: ${{ matrix.replica }}
     steps:
@@ -20,16 +20,25 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage60c full-build forensics
-        run: python stage60c_full_build_state_forensics.py
+      - name: Run Stage61a canonicalization test
+        run: python stage61a_area_power_canonicalization_test.py
       - name: Show summary
-        run: cat stage60c_outputs/stage60c_summary.json
+        run: cat stage61a_outputs/stage61a_summary.json
+      - name: Enforce physical closure only
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          d=json.loads(pathlib.Path('stage61a_outputs/stage61a_summary.json').read_text())
+          if d.get('status')!='PASS_STAGE61A_TEST': raise SystemExit('test failed')
+          for r in d['tests']:
+              if max(r['mass_error_m3'],r['area_partition_error_m2'],r['precip_partition_error_m3'])>1e-8:
+                  raise SystemExit('closure failed')
+          PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage60c-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage61a-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage60c_outputs/
-            stage60c_full_build_state_forensics.py
-            stage49_six_observation_irreversible_recruitment.py
-            stage56_aprmay_recalibration.py
+            stage61a_outputs/
+            stage61a_area_power_canonicalization_test.py
+            stage38_domain_corrected.py
           retention-days: 30
