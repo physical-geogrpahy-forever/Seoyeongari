@@ -1,4 +1,4 @@
-name: Stage78 cumulative-exposure four-scenario comparison
+name: Stage78 + TLMM reference audit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
@@ -29,7 +29,6 @@ jobs:
           if d.get('status') != 'PASS_STAGE78_CUMULATIVE_EXPOSURE_FOUR_SCENARIO_COMPARISON': raise SystemExit('Stage78 failed')
           if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
           if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
-          # Scenario rank, AICc and LOOCV are reported outputs only.
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -45,4 +44,25 @@ jobs:
             eghm_deterministic_kernel.py
             eghm_deterministic_forcing.py
             eghm_deterministic_geometry.py
+          retention-days: 30
+
+  tlmm-reference-audit:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download and audit published TLMM ESM workbook
+        run: python tlmm_reference_spreadsheet_audit.py
+      - name: Show compact formula audit
+        run: cat tlmm_reference_spreadsheet_audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tlmm-published-esm-audit
+          path: |
+            tlmm_reference_spreadsheet_audit.json
+            tlmm_esm_*.json
+            tlmm_reference_spreadsheet_audit.py
           retention-days: 30
