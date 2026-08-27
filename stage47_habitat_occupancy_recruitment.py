@@ -18,6 +18,11 @@ This removes repeated recruitment on the same exposed area without adding a
 new fitted correction term or calendar trend. Stage45 expanded hydrology,
 strict 2% gates, exact water/area partition, no-edge rules, nested selection and
 the sealed 2022 holdout are unchanged.
+
+Implementation note: all (r_est,r_flood) states for one hydrologic realization
+are advanced simultaneously in one daily NumPy vector. This is algebraically
+identical to the scalar recurrence and changes only runtime, not candidates or
+acceptance rules.
 """
 from __future__ import annotations
 import itertools,json,shutil
@@ -27,7 +32,7 @@ import pandas as pd
 import stage40_bidirectional_hydroperiod as s40
 from stage38_domain_corrected import hydro
 from stage35c_mass_balance_state_operator import A0
-from stage45_expanded_hydrology_nested import GRIDS,HKEYS,ALLKEYS,annual,annual_hydro
+from stage45_expanded_hydrology_nested import GRIDS,HKEYS,ALLKEYS,annual_hydro
 
 OUT=Path('stage47_outputs'); OUT.mkdir(exist_ok=True)
 EST_WINDOW_D=14
@@ -35,6 +40,7 @@ FLOOD_LAG_D=28
 
 
 def occupancy_state(E,F,re,rf):
+    """Scalar reference implementation used by the locked holdout."""
     E=np.asarray(E,float); F=np.asarray(F,float)
     c=0.; st=np.empty(len(E)); upv=np.empty(len(E)); dnv=np.empty(len(E))
     ae=float(re)/365.; af=float(rf)/365.
@@ -46,20 +52,40 @@ def occupancy_state(E,F,re,rf):
     return st,float(upv.sum()),float(dnv.sum()),float(dnv.max())
 
 
+def occupancy_grid_annual(dt,E,F,re_vals,rf_vals):
+    """Exact simultaneous recurrence for every ecological-rate pair."""
+    pairs=list(itertools.product(re_vals,rf_vals))
+    ae=np.array([p[0] for p in pairs],float)/365.0
+    af=np.array([p[1] for p in pairs],float)/365.0
+    c=np.zeros(len(pairs),float); te=np.zeros_like(c); tr=np.zeros_like(c); mr=np.zeros_like(c)
+    sums=np.zeros((len(pairs),len(s40.YEARS)),float)
+    dt=pd.to_datetime(dt); yr=dt.year.to_numpy(); mo=dt.month.to_numpy()
+    slot=np.full(len(E),-1,int); counts=np.zeros(len(s40.YEARS),int)
+    for j,y in enumerate(s40.YEARS):
+        m=(yr==int(y)) & np.isin(mo,[5,6]); slot[m]=j; counts[j]=int(m.sum())
+    for i in range(len(E)):
+        up=ae*np.maximum(float(E[i])-c,0.0)
+        dn=af*float(F[i])*c
+        c=np.clip(c+up-dn,0.,1.)
+        te+=up; tr+=dn; mr=np.maximum(mr,dn)
+        j=slot[i]
+        if j>=0: sums[:,j]+=c
+    S=sums/counts[None,:]
+    return {pairs[k]:(S[k].copy(),float(te[k]),float(tr[k]),float(mr[k])) for k in range(len(pairs))}
+
+
 def build_candidates(F):
     internal={k:[v for v in vals if v!=min(vals) and v!=max(vals)] for k,vals in GRIDS.items()}
     out=[]
+    re_vals=internal['r_est_yr']; rf_vals=internal['r_flood_yr']
     for vals in itertools.product(*[internal[k] for k in HKEYS]):
         hp=dict(zip(HKEYS,vals)); h=hydro(F,hp); a=np.asarray(h['area'],float)
         exposed=np.clip((A0-a)/A0,0,1)
         E=pd.Series(exposed).rolling(EST_WINDOW_D,min_periods=EST_WINDOW_D).min().fillna(0).to_numpy()
         Fw=pd.Series(np.clip(a/A0,0,1)).rolling(FLOOD_LAG_D,min_periods=1).mean().to_numpy()
-        ec={}
-        for re,rf in itertools.product(internal['r_est_yr'],internal['r_flood_yr']):
-            x,te,tr,mr=occupancy_state(E,Fw,re,rf)
-            ec[(re,rf)]=(annual(h['dates'],x),te,tr,mr)
+        ec=occupancy_grid_annual(h['dates'],E,Fw,re_vals,rf_vals)
         hc={w:annual_hydro(h['dates'],h['return_flow'],w) for w in internal['hydro_window_d']}
-        for re,rf,w in itertools.product(internal['r_est_yr'],internal['r_flood_yr'],internal['hydro_window_d']):
+        for re,rf,w in itertools.product(re_vals,rf_vals,internal['hydro_window_d']):
             S,te,tr,mr=ec[(re,rf)]
             out.append({**hp,'r_est_yr':re,'r_flood_yr':rf,'hydro_window_d':w,'S':S,'H':hc[w],
               'total_establishment':te,'total_reversal':tr,'max_reversal_daily':mr,
@@ -75,6 +101,7 @@ def relabel():
     d=json.loads(src.read_text(encoding='utf-8'))
     d['model']='Stage47 continuous-exposure habitat occupancy + slow flood reversal'
     d['stage47_change']='recruitment only into continuously exposed but unoccupied habitat; strict gates unchanged'
+    d['stage47_runtime_change']='all ecological-rate recurrences vectorized simultaneously; science/candidates unchanged'
     d['establishment_continuous_exposure_window_days']=EST_WINDOW_D
     d['flood_reversal_trailing_window_days']=FLOOD_LAG_D
     d['holdout_2022_used']=False
