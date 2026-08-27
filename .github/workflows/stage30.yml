@@ -1,10 +1,10 @@
-name: Stage62 official deterministic central fit
+name: Stage63 official deterministic four-scenario peat
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage62:
+  stage63:
     strategy:
       fail-fast: false
       matrix:
@@ -20,16 +20,17 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage62 official central fit
-        run: python stage62_official_deterministic_central_fit.py
+      - name: Run Stage63 deterministic four-scenario peat analysis
+        run: python stage63_official_deterministic_four_scenario_peat.py
       - name: Show summary
-        run: cat stage62_outputs/stage62_summary.json
+        run: cat stage63_outputs/stage63_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage62-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage63-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage62_outputs/
-            stage62_official_deterministic_central_fit.py
+            stage63_outputs/
+            stage63_official_deterministic_four_scenario_peat.py
+            eghm_deterministic_scenarios.py
             eghm_deterministic_kernel.py
             eghm_deterministic_forcing.py
             eghm_deterministic_geometry.py
