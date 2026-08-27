@@ -2,12 +2,12 @@
 """Deterministic meteorological forcing for the Seoyeongari EGHM model.
 
 This module reproduces the Stage30 forcing equations while eliminating CPU-
-dispatched NumPy transcendental functions.  Raw decimal strings are parsed
+dispatched NumPy transcendental functions. Raw decimal strings are parsed
 exactly, missing AWS temperature/wind values are linearly interpolated in fixed
 order, and FAO-56 / Penman terms are evaluated with mpmath at fixed precision.
 Only the final daily forcing values are rounded to IEEE-754 binary64.
 
-Scientific equations and meteorological constants are unchanged.  Numerical
+Scientific equations and meteorological constants are unchanged. Numerical
 implementation is changed solely to make the forcing reproducible across
 heterogeneous runners.
 """
@@ -21,7 +21,6 @@ from typing import Dict, List, Optional, Tuple
 
 import mpmath as mp
 import numpy as np
-import pandas as pd
 
 AWS = Path('OBS_AWS_DD_20250930013603.csv')
 ASOS = Path('OBS_ASOS_DD_20250930041037.csv')
@@ -119,8 +118,8 @@ def _read_raw() -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int
         for k in raw:
             raw[k].append(_dec(r.get(k)))
 
-    raw_missing = {k: sum(v is None for v in raw[k]) for k in raw}
-    raw_missing['sun'] = sum(dt not in sun_n for dt in dates)
+    source_missing = {k: sum(v is None for v in raw[k]) for k in raw}
+    source_missing['sun'] = sum(dt not in sun_n for dt in dates)
 
     pre = [(v if v is not None else Decimal('0')) for v in raw['pre']]
     pre = [max(v, Decimal('0')) for v in pre]
@@ -135,7 +134,13 @@ def _read_raw() -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int
     return dates, {
         'tmean': tmean, 'tmin': tmin, 'tmax': tmax,
         'pre': pre, 'wind': wind, 'sun': sun,
-    }, raw_missing
+    }, source_missing
+
+
+def source_missing_before_fill() -> Dict[str, int]:
+    """Missing values in the source daily series before deterministic filling."""
+    _, _, missing = _read_raw()
+    return dict(missing)
 
 
 def _m(d: Decimal) -> mp.mpf:
@@ -147,7 +152,7 @@ def _clip_m(x: mp.mpf, lo: mp.mpf, hi: mp.mpf) -> mp.mpf:
 
 
 def deterministic_forcing():
-    dates, x, raw_missing = _read_raw()
+    dates, x, source_missing = _read_raw()
     mp.mp.dps = MP_DPS
 
     pi = mp.pi
@@ -245,7 +250,14 @@ def deterministic_forcing():
         k: np.asarray([float(v) for v in x[k]], dtype=float)
         for k in ('tmean', 'tmin', 'tmax', 'pre', 'wind', 'sun')
     }
-    return F, raw_missing, annual, cleaned
+
+    # Preserve Stage30 bookkeeping semantics: sunshine was zero-filled before
+    # its `raw_missing` count, while AWS temperature/wind counts were reported
+    # before interpolation.  The true source-level sunshine count is exposed
+    # separately by source_missing_before_fill().
+    forcing_missing = dict(source_missing)
+    forcing_missing['sun'] = 0
+    return F, forcing_missing, annual, cleaned
 
 
 # Compatibility alias for code that expects forcing().
