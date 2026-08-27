@@ -1,10 +1,10 @@
-name: Stage51 persistent peat sensitivity
+name: Stage52 fixed-parameter OAT and provenance
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage51:
+  run-stage52:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -13,32 +13,33 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage51 persistent net peat accretion sensitivity
-        run: python stage51_persistent_peat_sensitivity.py
-      - name: Show Stage51 summary
+      - name: Run Stage52 OAT and provenance audit
+        run: python stage52_oat_provenance.py
+      - name: Show Stage52 summary
         if: always()
-        run: cat stage51_outputs/stage51_summary.json || true
-      - name: Enforce physical/data contract only
+        run: cat stage52_outputs/stage52_summary.json || true
+      - name: Enforce physical and data contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage51_outputs/stage51_summary.json')
+          p=pathlib.Path('stage52_outputs/stage52_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_STAGE51_ANALYSIS':
-              raise SystemExit('Stage51 analysis failed')
+          if d.get('status') != 'PASS_STAGE52_ANALYSIS':
+              raise SystemExit('Stage52 analysis failed')
           if d.get('pond_area_observation_2022') != 'ABSENT':
               raise SystemExit('2022 pond-area observation must be absent')
-          wb=d.get('water_balance',{})
+          wb=d.get('water_balance_central',{})
           if max(wb.values()) > 1e-8:
               raise SystemExit('physical closure failed')
-          # Scenario rank is deliberately NOT an acceptance condition.
+          # Scenario ranking is output only; it is not an acceptance gate.
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage51-persistent-peat-sensitivity
+          name: stage52-oat-provenance
           path: |
-            stage51_outputs/
+            stage52_outputs/
+            stage52_oat_provenance.py
             stage51_persistent_peat_sensitivity.py
             stage50_four_scenario_peat_sensitivity.py
             EGHM_STRICT_MODEL_RULES.md
