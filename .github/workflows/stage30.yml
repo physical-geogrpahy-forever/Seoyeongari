@@ -1,31 +1,31 @@
-name: Stage44 continuous-ponding reversal strict validation
+name: Stage45 expanded hydrology strict validation
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage44:
+  run-stage45:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage 44 continuous-ponding reversal + nested selection
-        id: stage44
+      - name: Run Stage 45 expanded hydrology + slow bidirectional ecology
+        id: stage45
         continue-on-error: true
-        run: python stage44_continuous_ponding_reversal.py
-      - name: Show Stage 44 summary
+        run: python stage45_expanded_hydrology_nested.py
+      - name: Show Stage 45 summary
         if: always()
-        run: cat stage44_outputs/stage44_summary.json || true
-      - name: Show Stage 44 diagnostic preview
+        run: cat stage45_outputs/stage45_summary.json || true
+      - name: Show Stage 45 diagnostic preview
         if: always()
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage44_outputs/stage44_summary.json')
+          p=pathlib.Path('stage45_outputs/stage45_summary.json')
           if p.exists():
               d=json.loads(p.read_text())
               print('status=',d.get('status'))
@@ -34,29 +34,29 @@ jobs:
               print('rejection_reason_counts=',d.get('rejection_reason_counts'))
               print('selected=',json.dumps(d.get('selected'),indent=2))
               print('outer=',json.dumps(d.get('nested_outer_folds'),indent=2))
-              print('best_rejected_preview=',json.dumps(d.get('best_rejected_preview',[])[:8],indent=2))
+              print('best_rejected_preview=',json.dumps(d.get('best_rejected_preview',[])[:10],indent=2))
           PY
-      - name: Enforce every Stage 44 pre-holdout gate
+      - name: Enforce every Stage 45 pre-holdout gate
         if: always()
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage44_outputs/stage44_summary.json')
+          p=pathlib.Path('stage45_outputs/stage45_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
           if not d.get('nested_selection_pass',False):
-              raise SystemExit('Stage44 strict/nested gate failed; 2022 remains sealed')
+              raise SystemExit('Stage45 strict/nested gate failed; 2022 remains sealed')
           PY
-      - name: Run 2022 holdout only after full Stage 44 pass
-        run: python stage44_holdout_2022.py
+      - name: Run 2022 holdout only after full Stage 45 pass
+        run: python stage45_holdout_2022.py
       - name: Show holdout summary
-        run: cat stage44_holdout_outputs/stage44_holdout_2022.json
+        run: cat stage45_holdout_outputs/stage45_holdout_2022.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage44-continuous-ponding-results
+          name: stage45-expanded-hydrology-results
           path: |
-            stage44_outputs/
-            stage44_holdout_outputs/
+            stage45_outputs/
+            stage45_holdout_outputs/
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
