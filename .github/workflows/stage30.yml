@@ -1,62 +1,8 @@
-name: Stage48 nested recruitment window validation
+name: EGHM maintenance
 on:
-  push:
-    branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage48:
+  maintenance:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install numpy pandas
-      - name: Run Stage 48 nested 7/14/21-day recruitment window search
-        id: stage48
-        continue-on-error: true
-        run: python stage48_nested_recruitment_window.py
-      - name: Show Stage 48 summary
-        if: always()
-        run: cat stage48_outputs/stage48_summary.json || true
-      - name: Show Stage 48 diagnostic preview
-        if: always()
-        run: |
-          python - <<'PY'
-          import json, pathlib
-          p=pathlib.Path('stage48_outputs/stage48_summary.json')
-          if p.exists():
-              d=json.loads(p.read_text())
-              print('status=',d.get('status'))
-              print('n_candidates=',d.get('n_candidates_interior_grid'))
-              print('n_final_rule_pass=',d.get('n_final_rule_pass'))
-              print('rejection_reason_counts=',d.get('rejection_reason_counts'))
-              print('selected=',json.dumps(d.get('selected'),indent=2))
-              print('outer=',json.dumps(d.get('nested_outer_folds'),indent=2))
-              print('best_rejected_preview=',json.dumps(d.get('best_rejected_preview',[])[:10],indent=2))
-          PY
-      - name: Enforce every Stage 48 pre-holdout gate
-        if: always()
-        run: |
-          python - <<'PY'
-          import json, pathlib
-          p=pathlib.Path('stage48_outputs/stage48_summary.json')
-          d=json.loads(p.read_text()) if p.exists() else {}
-          if not d.get('nested_selection_pass',False):
-              raise SystemExit('Stage48 strict/nested gate failed; 2022 remains sealed')
-          PY
-      - name: Run 2022 holdout only after full Stage 48 pass
-        run: python stage48_holdout_2022.py
-      - name: Show holdout summary
-        run: cat stage48_holdout_outputs/stage48_holdout_2022.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: stage48-nested-window-results
-          path: |
-            stage48_outputs/
-            stage48_holdout_outputs/
-            EGHM_STRICT_MODEL_RULES.md
-          if-no-files-found: warn
-          retention-days: 30
+      - run: echo "Workflow temporarily paused while the six-observation calibration contract is updated."
