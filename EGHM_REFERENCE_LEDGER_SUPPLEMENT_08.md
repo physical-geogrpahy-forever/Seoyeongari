@@ -31,33 +31,38 @@ The old undergraduate thesis contains a 2022 mapped value, but current project r
 
 # Q2. Recovered provenance of the historical mapped areas
 
-The current archived Main body documents substantially more mapping provenance than an earlier audit initially recognized.
+The current archived Main body and Supplementary Table A.1 document substantially more mapping provenance than an earlier audit initially recognized.
 
 Recovered method details:
 
+- data provider: **National Geographic Information Institute (NGII; 국토지리정보원), National Geographic Information Platform / 국토정보플랫폼**;
+- archived project source URL: `https://map.ngii.go.kr/ms/map/NlipMap.do`;
+- source access date recorded in Supplementary Table A.1: **30 April 2024**;
 - imagery type: **orthorectified airborne imagery**;
 - years: 2011, 2013, 2015, 2017, 2019, 2021, 2023;
 - acquisition season: **April or May** according to image metadata;
-- spatial resolution: **0.5 m**;
+- spatial resolution: **0.5 m** in the study's archived metadata/method record;
 - GIS software: **QGIS 3.26.2**;
 - response design: water-body boundaries were **manually interpreted and digitized** for each temporal image;
 - area was calculated from the resulting digitized polygons.
 
-Therefore the historical observations are not undocumented satellite-classification outputs. They are seasonal, orthorectified, 0.5-m airborne-image manual delineations.
+Therefore the historical observations are not undocumented satellite-classification outputs. They are NGII-sourced spring orthorectified airborne-image manual delineations.
+
+NGII independently documents that it has operated nationwide digital aerial photography since 2004 and nationwide orthophoto/orthogonal imagery production since 2010, with the products distributed through the National Geographic Information Platform. That institutional documentation supports the provenance of the image source, although the exact year-specific flight records used in this study still need to be recovered from the project/source metadata.
 
 What still remains to be recovered for a complete reproducibility/uncertainty package:
 
-- image provider/platform and dataset identifier for each year;
+- year-specific NGII dataset/product identifier;
 - exact acquisition date for each image;
-- orthorectification/georegistration accuracy or RMSE metadata;
-- original source-image files and/or archival URLs;
+- orthorectification/georegistration accuracy or RMSE metadata for each selected image/product;
+- original source-image files or archived download package and checksums;
 - operator/digitizing scale and explicit edge criterion for mixed vegetation/shadow margins;
 - inter-operator or repeated-digitization uncertainty;
 - checksums and source paths for all original year-specific polygon files.
 
 Audit classification:
 
-**CORE MAPPING METHOD RECOVERED / POSITIONAL AND INTERPRETATION UNCERTAINTY NOT YET QUANTIFIED.**
+**PROVIDER + CORE MAPPING METHOD RECOVERED / YEAR-SPECIFIC POSITIONAL AND INTERPRETATION UNCERTAINTY NOT YET QUANTIFIED.**
 
 This is a materially stronger provenance status than “method unknown.”
 
@@ -205,19 +210,32 @@ The RF workflow remains useful as a classification diagnostic only.
 
 ---
 
-# Q11. Site-scale uncertainty protocol now appropriate for Seoyeongari
+# Q11. Temporal support of the observations — important unresolved point
 
-Because the core image method is already known (0.5-m orthorectified April/May airborne images + manual digitization), the next uncertainty work should be focused rather than reconstructing the whole method from scratch.
+The seven historical polygons are **snapshots from April or May**, whereas the current Stage49–52 evaluation feature uses a **May–June mean** for the six evaluation years. This aggregation was adopted while exact year-specific image dates were unavailable, but it is not equivalent to a dated airborne-image observation.
+
+Therefore:
+- the May–June mean must not be described as if it were the image acquisition date;
+- exact NGII acquisition dates should be recovered if possible;
+- until exact dates are recovered, evaluation-window sensitivity (e.g. April, May, April–May, May–June) should be reported as a methodological robustness diagnostic without selecting the window that minimizes RMSE.
+
+This is now a higher-priority temporal-support issue than the already recovered image source/resolution information.
+
+---
+
+# Q12. Site-scale uncertainty protocol now appropriate for Seoyeongari
+
+Because the core image method is already known (NGII 0.5-m orthorectified April/May airborne images + manual digitization), the next uncertainty work should be focused rather than reconstructing the whole method from scratch.
 
 ## Level 1 — finish metadata recovery
 
 For each year record:
 
-- provider/dataset identifier;
+- exact NGII dataset/product identifier;
 - exact acquisition date;
 - orthorectification/georegistration accuracy;
 - CRS;
-- source image path/URL and checksum;
+- source image path/download package and checksum;
 - original polygon path/checksum.
 
 ## Level 2 — repeated independent delineation
@@ -255,21 +273,21 @@ Useful diagnostics once intervals exist:
 
 ---
 
-# Q12. Implication for current 29.9 m² Integrated RMSE
+# Q13. Implication for current 29.9 m² Integrated RMSE
 
-The historical mapping method is now sufficiently documented to state that observations come from standardized 0.5-m orthorectified spring airborne imagery manually digitized in QGIS.
+The historical mapping method is now sufficiently documented to state that observations come from NGII orthorectified spring airborne imagery manually digitized in QGIS.
 
 However, **there is still no quantified positional/repeated-delineation uncertainty**, so there is not yet a defensible basis to say whether 29.9 m² is above or below observational uncertainty.
 
+Additionally, the current May–June model aggregation is only an approximate temporal support for April/May image snapshots until exact acquisition dates are recovered.
+
 Manuscript-safe wording:
 
-> Open-water areas were manually delineated from orthorectified 0.5-m airborne imagery acquired in April–May. Model error metrics quantify disagreement with these mapped area estimates; positional and manual delineation uncertainty was not independently quantified and therefore the mapped polygons were not treated as error-free ground truth.
-
-If original images and registration metadata are recovered, this can be strengthened with explicit uncertainty intervals.
+> Open-water areas were manually delineated from NGII orthorectified airborne imagery acquired in April–May. Model error metrics quantify disagreement with these mapped area estimates. Because year-specific acquisition dates and positional/manual delineation uncertainty were not independently reconstructed in the current reproducibility archive, the mapped polygons were not treated as error-free ground truth and the temporal aggregation window was examined separately for robustness.
 
 ---
 
-# Q13. Decimal precision rule
+# Q14. Decimal precision rule
 
 Historical GIS calculations produce area values with many decimal places, but final manuscript tables should not imply centimetre-scale boundary accuracy.
 
@@ -280,10 +298,10 @@ Recommended reporting:
 
 ---
 
-# Q14. Highest-priority data recovery
+# Q15. Highest-priority data recovery
 
-1. Provider/dataset metadata and exact date for the 2011, 2013, 2015, 2017, 2019, 2021 and 2023 0.5-m orthorectified airborne images.
-2. Original source image files or stable archival links.
+1. Exact NGII product identifier and acquisition date for the 2011, 2013, 2015, 2017, 2019, 2021 and 2023 images.
+2. Original source image files/download packages and checksums.
 3. Original year-specific pond polygons and checksums.
 4. Orthorectification/georegistration accuracy metadata.
 5. Independent or repeated manual delineations for direct uncertainty estimation.
@@ -291,12 +309,14 @@ Recommended reporting:
 
 ---
 
-# Q15. Net judgement
+# Q16. Net judgement
 
-**The six-year observation series has a documented core mapping method and remains suitable for the current model comparison.**
+**The six-year observation series has a documented provider and core mapping method and remains suitable for the current model comparison.**
 
-Its remaining weakness is not unknown image resolution/method, but **unquantified positional and manual delineation uncertainty**.
+Its remaining weaknesses are:
+- unquantified positional/manual delineation uncertainty;
+- unresolved exact acquisition dates and therefore imperfect model–observation temporal alignment.
 
 The 2023 RF workflow is not an independent accuracy assessment and must not be presented as one.
 
-The next high-value observation task is therefore metadata completion plus repeated/independent boundary uncertainty estimation, not replacement of the current area series.
+The next high-value observation/model task is exact-date recovery if possible and, regardless, a non-optimizing evaluation-window robustness analysis.
