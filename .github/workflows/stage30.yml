@@ -1,10 +1,10 @@
-name: Stage71 observation contract freeze
+name: Stage72 process claim audit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage71:
+  stage72:
     strategy:
       fail-fast: false
       matrix:
@@ -17,19 +17,18 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage71 observation contract freeze
-        run: python stage71_observation_contract_freeze.py
+      - name: Run Stage72 process claim audit
+        run: python stage72_process_claim_audit.py
       - name: Show summary
-        run: cat stage71_outputs/stage71_summary.json
+        run: cat stage72_outputs/stage72_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage71-${{ matrix.os }}
+          name: stage72-${{ matrix.os }}
           path: |
-            stage71_outputs/
+            stage72_outputs/
+            stage72_process_claim_audit.py
             stage71_observation_contract_freeze.py
-            stage63_official_deterministic_four_scenario_peat.py
-            stage68_2024_forward_hydroperiod_validation.py
-            stage69_observation_semantics_audit.py
+            STAGE65_71_DECISION_LOG.md
             EGHM_STRICT_MODEL_RULES.md
             eghm_strict_rules.py
             eghm_deterministic_scenarios.py
