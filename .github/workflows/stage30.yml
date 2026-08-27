@@ -1,10 +1,10 @@
-name: Stage54 hidden constants and hydroperiod audit
+name: Stage55 observation-window robustness audit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage54:
+  run-stage55:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -13,40 +13,41 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage54 hidden-constant robustness audit
-        run: python stage54_hidden_constant_robustness.py
-      - name: Show Stage54 summary
+      - name: Run Stage55 temporal-support audit
+        run: python stage55_observation_window_robustness.py
+      - name: Show Stage55 summary
         if: always()
-        run: cat stage54_outputs/stage54_summary.json || true
+        run: cat stage55_outputs/stage55_summary.json || true
       - name: Enforce physical and data contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage54_outputs/stage54_summary.json')
+          p=pathlib.Path('stage55_outputs/stage55_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_STAGE54_DIAGNOSTIC':
-              raise SystemExit('Stage54 diagnostic failed')
+          if d.get('status') != 'PASS_STAGE55_TEMPORAL_SUPPORT_AUDIT':
+              raise SystemExit('Stage55 temporal-support audit failed')
           if d.get('pond_area_observation_2022') != 'ABSENT':
               raise SystemExit('2022 pond-area observation must be absent')
-          wb=d.get('physical_closure_central',{})
+          if d.get('window_selection_used_for_acceptance_or_optimization') is not False:
+              raise SystemExit('Window ranking must not be an acceptance/optimization gate')
+          wb=d.get('physical_closure',{})
           if max(wb.values()) > 1e-8:
               raise SystemExit('physical closure failed')
-          # Hidden-constant values, hydroperiod diagnostics, and scenario rank are outputs only.
-          # None are acceptance gates and no hidden constant is optimized here.
+          # Window/scenario ranking is output only. Exact acquisition dates override fit ranking if recovered.
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage54-hidden-constant-hydroperiod
+          name: stage55-observation-window-robustness
           path: |
-            stage54_outputs/
+            stage55_outputs/
+            stage55_observation_window_robustness.py
             stage54_hidden_constant_robustness.py
             stage52_oat_provenance.py
             stage51_persistent_peat_sensitivity.py
             stage50_four_scenario_peat_sensitivity.py
-            EGHM_REFERENCE_LEDGER_SUPPLEMENT_02.md
-            EGHM_REFERENCE_LEDGER_SUPPLEMENT_03.md
-            EGHM_REFERENCE_LEDGER_SUPPLEMENT_05.md
+            EGHM_REFERENCE_LEDGER_SUPPLEMENT_08.md
+            STAGE54_DECISION_LOG.md
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
