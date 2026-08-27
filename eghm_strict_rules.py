@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """Non-negotiable acceptance gates for Seoyeongari EGHM experiments.
 
-Current calibration contract (2026-08-27)
------------------------------------------
-The pond-area observation set contains exactly six years: 2013, 2015, 2017,
-2019, 2021 and 2023. There is no 2022 pond-area observation in the analysis.
-2022 meteorology may remain in the continuous forcing series, but no 2022 pond
-area is fitted, held out, scored, ranked, or used as a stopping criterion.
+Current mapped-wetland-extent contract (2026-08-27)
+----------------------------------------------------
+The long-term observation set contains exactly six mapped wetland-extent years:
+2013, 2015, 2017, 2019, 2021 and 2023. The original thesis defines this remote-
+sensing quantity through wetland/transition-zone extent relative to terrestrial
+vegetation and forest encroachment. It is not a daily open-water observation.
+There is no 2022 mapped-wetland-extent observation in the current analysis.
+2022 meteorology may remain in the continuous forcing series, but no 2022 area
+value is fitted, held out, scored, ranked, or used as a stopping criterion.
+
+The current observation-operator process support is April-May, based on archived
+image acquisition metadata rather than fit optimization. Seasonal visible-pool
+presence/exposure is a separate hydroperiod validation variable. Numerical zero
+surface storage may be reported as a hydraulic diagnostic, but must not be
+silently equated with visible open-water absence without independently supported
+surface-expression geometry.
 
 Leave-one-year-out and nested-CV quantities may be computed for historical or
 diagnostic purposes, but they are not acceptance gates and must not determine
@@ -16,6 +26,10 @@ from the six observed years subject first to process and closure constraints.
 from __future__ import annotations
 
 EVAL_YEARS = (2013, 2015, 2017, 2019, 2021, 2023)
+OBS_MONTHS = (4, 5)
+OBSERVATION_VARIABLE = 'mapped_wetland_extent'
+HYDRAULIC_STATE_VARIABLE = 'daily_surface_storage_and_hydraulic_wetted_area'
+HYDROPERIOD_VALIDATION_VARIABLE = 'visible_surface_pool_presence_or_exposure'
 MASS_TOL_M3 = 1e-8
 AREA_PARTITION_TOL_M2 = 1e-8
 PRECIP_PARTITION_TOL_M3 = 1e-8
@@ -78,8 +92,10 @@ def candidate_reasons(
 ) -> list[str]:
     """Return current acceptance failures.
 
-    Full-six-year nRMSE remains a gate. LOOCV/nested-CV are opt-in diagnostics
-    only and default to False under the current six-observation contract.
+    Full-six-year mapped-wetland-extent nRMSE remains a gate. LOOCV/nested-CV
+    are opt-in diagnostics only and default to False under the current six-
+    observation contract. Hydroperiod evidence is not scored here because it is
+    a separate observation variable.
     """
     r = contract_reasons(contract)
     if float(candidate.get('max_mass_error_m3', float('inf'))) > MASS_TOL_M3:
