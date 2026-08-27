@@ -1,0 +1,25 @@
+{
+  "published_processes_preserved": [
+    "newly exposed sediment colonized by marsh within one annual growing-season step",
+    "continuous flooding duration dt at specified elevation",
+    "lower-limit f response with cmin exponential scaling",
+    "dewatered duration xt at specified elevation",
+    "upper-limit s response with wmin exponential scaling",
+    "one-growing-season flood-pulse woody reset / subsequent marsh re-establishment",
+    "September mean level as the published Great Lakes worked-example annual support"
+  ],
+  "explicit_EGHM_couplings_not_claimed_as_TLMM_biology": [
+    "accepted Seoyeongari hypsometry used to supply elevation-area weights",
+    "woody fraction = complement of marsh decline for mutually-exclusive ET bookkeeping",
+    "class-specific ET feedback to daily EGHM water balance",
+    "peat coupling and mapped-open-water observation operator"
+  ],
+  "forbidden": [
+    "additive exposure score",
+    "invented herb-to-woody logistic function",
+    "pond-area fitting of f or s",
+    "daily_forcing_v5_equations.csv as a raw meteorological input"
+  ],
+  "audit_scalar_vs_vector": "PASS",
+  "audit_topographic_weighting_identity": "PASS"
+}
