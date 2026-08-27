@@ -5,8 +5,8 @@ This stage does not recalibrate the Stage49 hydrology and does not add a model
 coefficient. It separates two quantities that should not be conflated:
 
 1) persistent net vertical peat accretion, relevant to geomorphic elevation
-   change over the modeled interval; site-informed long-term range 0.29--0.47
-   mm/yr, central reference 0.38 mm/yr;
+   change over the modeled interval; field-confirmed long-term values 0.29,
+   0.38 and 0.47 mm/yr, with their median used as the central reference;
 2) recent near-surface apparent accumulation, 2.89--7.00 mm/yr, retained as an
    upper stress test but not interpreted as a persistent net elevation rate.
 
@@ -30,8 +30,13 @@ import stage50_four_scenario_peat_sensitivity as m
 
 OUT = Path('stage51_outputs')
 OUT.mkdir(exist_ok=True)
-PRIMARY_RATES = [0.29, 0.38, 0.47]
-CENTRAL_RATE = 0.38
+
+# Independently field-confirmed long-term persistent-net peat accretion values.
+# The central model value is the sample median, not a fit-selected value and not
+# an arbitrary midpoint inserted for numerical convenience.
+FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR = [0.29, 0.38, 0.47]
+PRIMARY_RATES = FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR
+CENTRAL_RATE = float(np.median(FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR))
 RECENT_STRESS_RATES = [2.89, 3.0, 5.0, 5.91, 7.0]
 
 
@@ -122,9 +127,11 @@ def main():
         'observed_area_years': [int(y) for y in m.YEARS],
         'pond_area_observation_2022': 'ABSENT',
         'primary_process_quantity': 'persistent net vertical peat accretion relevant to geomorphic elevation change',
+        'field_confirmed_persistent_rates_mm_yr': FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR,
         'primary_site_informed_range_mm_yr': PRIMARY_RATES,
         'central_reference_mm_yr': CENTRAL_RATE,
-        'central_reference_reason': 'midpoint of the site-informed long-term 0.29-0.47 mm/yr interval; not selected by fit optimization',
+        'central_reference_statistic': 'median',
+        'central_reference_reason': 'median of independently field-confirmed long-term persistent peat accretion values; not selected by pond-area fit optimization',
         'recent_apparent_accumulation_stress_range_mm_yr': RECENT_STRESS_RATES,
         'recent_range_role': 'upper stress test only; not assumed equal to sustained net topographic rise',
         'central_metrics': cdf[['Scenario','RMSE_m2','nRMSE_pct','rank','K_colonizable_m2','K_hydro']].to_dict('records'),
