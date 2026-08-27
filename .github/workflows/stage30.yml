@@ -14,7 +14,7 @@ jobs:
           python-version: '3.11'
       - run: pip install numpy pandas
       - name: Run Stage50 strict four-scenario peat sensitivity
-        run: python stage50_four_scenario_peat_sensitivity.py
+        run: python stage50b_four_scenario_peat_sensitivity.py
       - name: Show Stage50 summary
         if: always()
         run: cat stage50_outputs/stage50_summary.json || true
@@ -39,6 +39,7 @@ jobs:
           path: |
             stage50_outputs/
             stage50_four_scenario_peat_sensitivity.py
+            stage50b_four_scenario_peat_sensitivity.py
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
