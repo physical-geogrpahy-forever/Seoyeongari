@@ -1,0 +1,14 @@
+component,rule,class,status
+lower-limit flooding,dt consecutive flooded annual support at specified elevation,PUBLISHED_TLMM,LOCKED
+lower-limit response,f=4 yr; cmin=0.01; scaled exponential marsh remaining,PUBLISHED_TLMM,LOCKED
+new exposure,marsh colonizes newly exposed sediment within one year/growing-season step,PUBLISHED_TLMM,LOCKED
+upper-limit dewatering,xt years dewatered at specified elevation,PUBLISHED_TLMM,LOCKED
+upper-limit response,s=30 yr; wmin=0.001; scaled exponential marsh remaining,PUBLISHED_TLMM,LOCKED
+woody flood reset,flood pulse >= one growing season kills woody canopy in simple model,PUBLISHED_TLMM,LOCKED
+annual support,September mean water level,PUBLISHED_TLMM_WORKED_EXAMPLE,LOCKED_ADAPTER
+elevation discretization,apply TLMM separately at many specified elevations,NUMERICAL_DISCRETIZATION_OF_TLMM,LOCKED
+elevation-to-area,accepted Seoyeongari hypsometry supplies band area weights,EGHM_SITE_GEOMETRY_COUPLING,LOCKED
+woody area bookkeeping,1 - marsh remaining during dewatered succession,EGHM_MUTUALLY_EXCLUSIVE_COVER_BOOKKEEPING,LOCKED_NOT_TLMM_PARAMETER
+ET feedback,bare/herb/woody K mapping into daily EGHM water balance,EGHM_HYDROLOGIC_COUPLING,LOCKED_NOT_TLMM_PARAMETER
+raw met,AWS + ASOS only; rebuild V5 forcing,AUTHORITATIVE_EGHM_INPUT_CONTRACT,LOCKED
+derived forcing csv,optional audit/reproducibility output only,DERIVED_OUTPUT,NOT_REQUIRED
