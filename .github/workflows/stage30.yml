@@ -1,10 +1,10 @@
-name: Stage58b exact central consistency audit
+name: Stage58c OAT mutation audit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage58b:
+  run-stage58c:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -13,18 +13,18 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage58b consistency audit
-        run: python stage58b_central_consistency_audit.py
-      - name: Show Stage58b summary
+      - name: Run Stage58c mutation audit
+        run: python stage58c_oat_mutation_audit.py
+      - name: Show Stage58c summary
         if: always()
-        run: cat stage58b_outputs/stage58b_summary.json || true
+        run: cat stage58c_outputs/stage58c_summary.json || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage58b-central-consistency
+          name: stage58c-oat-mutation-audit
           path: |
-            stage58b_outputs/
-            stage58b_central_consistency_audit.py
+            stage58c_outputs/
+            stage58c_oat_mutation_audit.py
             stage58_aprmay_oat_provenance.py
             stage57_aprmay_four_scenario_peat.py
           if-no-files-found: warn
