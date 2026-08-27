@@ -1,15 +1,15 @@
-name: Stage61a area-power canonicalization test
+name: Stage61b deterministic geometry forensics
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage61a:
+  stage61b:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
-        replica: [1, 2, 3]
+        replica: [1, 2, 3, 4]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     env:
@@ -20,25 +20,16 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage61a canonicalization test
-        run: python stage61a_area_power_canonicalization_test.py
+      - name: Run Stage61b deterministic geometry forensics
+        run: python stage61b_deterministic_geometry_forensics.py
       - name: Show summary
-        run: cat stage61a_outputs/stage61a_summary.json
-      - name: Enforce physical closure only
-        run: |
-          python - <<'PY'
-          import json, pathlib
-          d=json.loads(pathlib.Path('stage61a_outputs/stage61a_summary.json').read_text())
-          if d.get('status')!='PASS_STAGE61A_TEST': raise SystemExit('test failed')
-          for r in d['tests']:
-              if max(r['mass_error_m3'],r['area_partition_error_m2'],r['precip_partition_error_m3'])>1e-8:
-                  raise SystemExit('closure failed')
-          PY
+        run: cat stage61b_outputs/stage61b_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage61a-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage61b-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage61a_outputs/
-            stage61a_area_power_canonicalization_test.py
+            stage61b_outputs/
+            stage61b_deterministic_geometry_forensics.py
+            eghm_deterministic_geometry.py
             stage38_domain_corrected.py
           retention-days: 30
