@@ -1,0 +1,31 @@
+name: Stage88 threshold drainage diagnostic
+on:
+  push:
+    branches: [chatgpt-stage30-20260826]
+    paths: ['stage88_threshold_drainage_diagnostic.py','.github/workflows/stage88.yml']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install numpy pandas mpmath
+      - run: python stage88_threshold_drainage_diagnostic.py
+      - name: Contract checks
+        run: |
+          python - <<'PY'
+          import json, pandas as pd
+          a=json.load(open('stage88_outputs/stage88_audit.json'))
+          assert a['status']=='PASS_STAGE88_THRESHOLD_DRAINAGE_DIAGNOSTIC'
+          assert a['parameter_fitting'] is False
+          assert a['max_mass_error_m3'] < 1e-8
+          s=pd.read_csv('stage88_outputs/stage88_summary.csv')
+          assert len(s)==5
+          assert (s['max_mass_error_m3'] < 1e-8).all()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage88-threshold-drainage-diagnostic
+          path: stage88_outputs/
