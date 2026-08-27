@@ -1,10 +1,10 @@
-name: Stage61b deterministic geometry forensics
+name: Stage61c scalar recurrence forensics
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage61b:
+  stage61c:
     strategy:
       fail-fast: false
       matrix:
@@ -20,16 +20,15 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage61b deterministic geometry forensics
-        run: python stage61b_deterministic_geometry_forensics.py
+      - name: Run Stage61c scalar recurrence forensics
+        run: python stage61c_scalar_recurrence_forensics.py
       - name: Show summary
-        run: cat stage61b_outputs/stage61b_summary.json
+        run: cat stage61c_outputs/stage61c_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage61b-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage61c-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage61b_outputs/
-            stage61b_deterministic_geometry_forensics.py
+            stage61c_outputs/
+            stage61c_scalar_recurrence_forensics.py
             eghm_deterministic_geometry.py
-            stage38_domain_corrected.py
           retention-days: 30
