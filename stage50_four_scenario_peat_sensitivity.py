@@ -115,13 +115,12 @@ def fit_nonnegative(X: np.ndarray, target: np.ndarray, upper_kc: float | None = 
             z = min(z, upper_kc)
         candidates += [np.array([z]), np.array([0.0])]
     elif ncol == 2:
-        # Kc-only boundary
         d = float(X[:, 0] @ X[:, 0])
         k0 = max(0.0, float(X[:, 0] @ target) / d) if d > 0 else 0.0
         if upper_kc is not None:
             k0 = min(k0, upper_kc)
         candidates.append(np.array([k0, 0.0]))
-        # Kh-only boundary
+
         d = float(X[:, 1] @ X[:, 1])
         k1 = max(0.0, float(X[:, 1] @ target) / d) if d > 0 else 0.0
         candidates.append(np.array([0.0, k1]))
@@ -163,27 +162,23 @@ def peat_geomorphic_loss(dt, V, rate_mm_yr):
 def fit_scenarios(S, H, G):
     rows = []
 
-    # Baseline: only short-term hydrologic anomaly.
     kh = fit_nonnegative(H, Y - A0)[0]
     pred = A0 + kh * H
     rm, nr = metric(pred)
     rows.append(('Baseline Model', 0.0, kh, pred, rm, nr))
 
-    # Hydrosere: cumulative recruitment + short-term hydrology.
     X = np.c_[-S, H]
     b = fit_nonnegative(X, Y - A0, upper_kc=A0)
     pred = A0 + X @ b
     rm, nr = metric(pred)
     rows.append(('Hydrosere Only Model', float(b[0]), float(b[1]), pred, rm, nr))
 
-    # Eco-Geo: deterministic peat surface expression + short-term hydrology.
     base = A0 - G
     kh = fit_nonnegative(H, Y - base)[0]
     pred = base + kh * H
     rm, nr = metric(pred)
     rows.append(('Eco-Geo Only Model', 0.0, kh, pred, rm, nr))
 
-    # Integrated: deterministic peat surface expression + recruitment + hydrology.
     base = A0 - G
     X = np.c_[-S, H]
     b = fit_nonnegative(X, Y - base, upper_kc=A0)
@@ -198,7 +193,6 @@ def main():
     hp = {k: P49[k] for k in ['V0','p_shape','tau_surf','local_frac','tau_fast','k_gw_mm_d']}
     h = hydro(F, hp)
 
-    # Exact water-balance gates remain common to all scenarios.
     assert h['mass_error'] <= MASS_TOL_M3
     assert h['area_partition_error'] <= AREA_PARTITION_TOL_M2
     assert h['precip_partition_error'] <= PRECIP_PARTITION_TOL_M3
@@ -259,7 +253,7 @@ def main():
 
     ref = df[np.isclose(df['peat_rate_mm_yr'], REFERENCE_PEAT_RATE)].sort_values('nRMSE_pct')
     integ = df[df['Scenario'] == 'Integrated Model'].sort_values('peat_rate_mm_yr')
-    hydro = df[df['Scenario'] == 'Hydrosere Only Model'].sort_values('peat_rate_mm_yr')
+    hydro_df = df[df['Scenario'] == 'Hydrosere Only Model'].sort_values('peat_rate_mm_yr')
     ecogeo = df[df['Scenario'] == 'Eco-Geo Only Model'].sort_values('peat_rate_mm_yr')
     baseline = df[df['Scenario'] == 'Baseline Model'].sort_values('peat_rate_mm_yr')
 
@@ -285,7 +279,7 @@ def main():
         'reference_3mm_metrics': ref[['Scenario','RMSE_m2','nRMSE_pct','rank_within_rate','K_colonizable_m2','K_hydro']].to_dict('records'),
         'integrated_rank1_for_all_tested_peat_rates': integrated_rank1_all,
         'integrated_nrmse_range_pct': [float(integ['nRMSE_pct'].min()), float(integ['nRMSE_pct'].max())],
-        'hydrosere_nrmse_pct': float(hydro['nRMSE_pct'].iloc[0]),
+        'hydrosere_nrmse_pct': float(hydro_df['nRMSE_pct'].iloc[0]),
         'ecogeo_nrmse_range_pct': [float(ecogeo['nRMSE_pct'].min()), float(ecogeo['nRMSE_pct'].max())],
         'baseline_nrmse_pct': float(baseline['nRMSE_pct'].iloc[0]),
         'best_integrated_peat_rate_mm_yr': float(integ.loc[integ['nRMSE_pct'].idxmin(), 'peat_rate_mm_yr']),
