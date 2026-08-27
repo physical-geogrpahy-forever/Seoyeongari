@@ -6,7 +6,7 @@ Updated: 2026-08-27
 
 The current EGHM is fitted/scored against six mapped open-water-area observations (2013, 2015, 2017, 2019, 2021, 2023), with 2011 used only as the initial/reference footprint. Because the central Integrated RMSE is now approximately 29.9 m², observation/map uncertainty is no longer negligible by default and must be documented separately from model error.
 
-This supplement audits what is currently recoverable about the historical area observations and establishes defensible rules for their use.
+This supplement audits the historical area observations and establishes defensible rules for their use.
 
 ---
 
@@ -29,30 +29,37 @@ The old undergraduate thesis contains a 2022 mapped value, but current project r
 
 ---
 
-# Q2. Recoverable provenance of the historical mapped areas
+# Q2. Recovered provenance of the historical mapped areas
 
-The archived undergraduate thesis describes the 2011–2023 series as derived from **satellite-image analysis** and uses the mapped changes to examine wetland contraction/terrestrialization.
+The current archived Main body documents substantially more mapping provenance than an earlier audit initially recognized.
 
-However, the currently searchable thesis text does not document with sufficient precision:
+Recovered method details:
 
-- image provider/source for each year;
+- imagery type: **orthorectified airborne imagery**;
+- years: 2011, 2013, 2015, 2017, 2019, 2021, 2023;
+- acquisition season: **April or May** according to image metadata;
+- spatial resolution: **0.5 m**;
+- GIS software: **QGIS 3.26.2**;
+- response design: water-body boundaries were **manually interpreted and digitized** for each temporal image;
+- area was calculated from the resulting digitized polygons.
+
+Therefore the historical observations are not undocumented satellite-classification outputs. They are seasonal, orthorectified, 0.5-m airborne-image manual delineations.
+
+What still remains to be recovered for a complete reproducibility/uncertainty package:
+
+- image provider/platform and dataset identifier for each year;
 - exact acquisition date for each image;
-- native/pansharpened spatial resolution;
-- georeferencing/orthorectification accuracy;
-- software and digitizing scale;
-- exact criterion used to distinguish visible open water / wetland boundary from shadow or vegetation;
-- whether the polygons were manually digitized, thresholded, or classified;
-- inter-operator or repeated-digitization uncertainty.
+- orthorectification/georegistration accuracy or RMSE metadata;
+- original source-image files and/or archival URLs;
+- operator/digitizing scale and explicit edge criterion for mixed vegetation/shadow margins;
+- inter-operator or repeated-digitization uncertainty;
+- checksums and source paths for all original year-specific polygon files.
 
 Audit classification:
 
-**AREA VALUES RECOVERED / FULL HISTORICAL MAPPING PROVENANCE INCOMPLETE.**
+**CORE MAPPING METHOD RECOVERED / POSITIONAL AND INTERPRETATION UNCERTAINTY NOT YET QUANTIFIED.**
 
-This is not evidence that the polygons are wrong. It means the current reproducibility package cannot yet assign them zero or known error.
-
-Action:
-- continue searching archived source imagery, GIS project files, shapefile metadata and notes before final manuscript freeze;
-- until recovered, describe historical area observations as mapped estimates rather than error-free ground truth.
+This is a materially stronger provenance status than “method unknown.”
 
 ---
 
@@ -63,17 +70,17 @@ Olofsson, P., Foody, G.M., Herold, M., Stehman, S.V., Woodcock, C.E. & Wulder, M
 Evidence class: **REMOTE-SENSING ACCURACY / AREA-ESTIMATION BEST PRACTICE**.
 
 Key support:
-- mapped land-cover/land-change area and classification accuracy must be treated together;
-- credible accuracy assessment requires explicit sampling, response/reference-data design, and analysis;
-- map-derived area is not automatically equivalent to true area when classification error exists;
-- uncertainty should be quantified where reference sampling permits it.
+- mapped land-cover/land-change area and mapping accuracy must be considered together;
+- credible accuracy assessment requires explicit reference/response design and analysis;
+- map-derived area is not automatically equivalent to true area when boundary/classification error exists;
+- uncertainty should be quantified where reference information permits it.
 
 Use in EGHM:
-- supports treating pond polygons as observations with potential mapping uncertainty rather than mathematically exact targets;
-- supports documenting source imagery, reference interpretation and independent validation.
+- supports treating the manual pond polygons as mapped observations with nonzero positional/interpretation uncertainty rather than mathematically exact ground truth;
+- supports documenting source imagery, interpretation rules and independent validation.
 
 Important scale caveat:
-- Olofsson et al. is designed largely for thematic land-cover/change mapping over larger regions. For the tiny Seoyeongari pond, its principles are more relevant than its specific sampling estimators; a site-specific boundary uncertainty approach may be preferable.
+- Olofsson et al. addresses thematic mapping mostly at larger spatial scales. For the small Seoyeongari pond, its principles are more applicable than its regional probability-sampling formulas; a boundary-position/repeated-delineation approach is more natural.
 
 ---
 
@@ -84,14 +91,14 @@ Stehman, S.V. & Foody, G.M. (2019). **Key issues in rigorous accuracy assessment
 Evidence class: **REMOTE-SENSING ACCURACY REVIEW / REPRODUCIBILITY**.
 
 Key support:
-- accuracy assessment requires high-quality reference data, a defensible response design, and transparent analysis;
+- accuracy assessment requires high-quality reference data and a defensible response design;
 - imperfect reference data can bias or overstate apparent map accuracy;
-- accuracy-assessment methodology must be documented sufficiently for reproducibility;
-- using data that are not independent of model/classifier construction can make evaluation over-optimistic.
+- assessment methodology must be documented for reproducibility;
+- using the same labels in classifier construction and evaluation can make apparent performance over-optimistic.
 
 Use in EGHM:
 - direct justification for rejecting circular 2023 RF agreement as an independent validation result;
-- supports explicitly documenting the provenance gap in historical area mapping rather than hiding it.
+- supports keeping manual historical polygons as observations while separately quantifying their uncertainty.
 
 ---
 
@@ -102,7 +109,7 @@ Foody, G.M. (2002). **Status of land cover classification accuracy assessment.**
 Evidence class: **REMOTE-SENSING ACCURACY REVIEW**.
 
 Use in EGHM:
-- background reference for confusion/error-based classification accuracy and the long-standing need to evaluate thematic maps rather than treating classified boundaries as ground truth.
+- background reference for error-based accuracy assessment and the general distinction between a mapped class boundary and error-free ground truth.
 
 ---
 
@@ -113,203 +120,183 @@ Fuller, L.M., Morgan, T.R. & Aichele, S.S. (2006). **Wetland Delineation with IK
 Evidence class: **DIRECT WETLAND-MAPPING METHOD / HIGH-RESOLUTION IMAGERY**.
 
 Key support:
-- automated supervised/unsupervised image classifications alone did not produce sufficiently reliable wetland boundaries in the case study;
-- the final delineation combined high-resolution imagery, automated results, manual interpretation and field verification;
-- wetland boundary positions can differ materially even where total mapped wetland area is similar.
+- automated image classifications alone did not necessarily provide reliable wetland boundaries;
+- final delineation benefited from high-resolution imagery, manual interpretation and field/reference information;
+- boundary positions can differ materially even where total mapped area is similar.
 
 Use in EGHM:
-- supports visual/manual expert boundary interpretation as potentially defensible for a small complex wetland, provided imagery and criteria are documented;
-- cautions against treating an automated classifier as an inherently superior independent truth source.
+- supports expert manual interpretation as a defensible method for a small, complex water/wetland boundary when source imagery and criteria are documented;
+- cautions against assuming an automated classifier is inherently a more independent truth source.
 
 ---
 
-# Q7. National wetland-mapping evidence on pseudo-reference data
+# Q7. Boundary positional uncertainty
 
-Recent national wetland-mapping research using remote sensing and AI emphasizes that boundaries derived by visual interpretation of very-high-resolution imagery can be useful pseudo-reference data but generally have higher uncertainty in class labeling and polygon contours than independent georeferenced field plots. Using the same or closely related interpreted imagery for both training and evaluation may produce over-optimistic accuracy estimates.
-
-Use in EGHM:
-- reinforces the requirement for independent validation or repeated delineation if classification accuracy is to be quoted.
-
----
-
-# Q8. Wetland shoreline positional uncertainty
-
-High-resolution wetland-shoreline studies comparing satellite/aerial boundaries with field surveys show that even high-resolution imagery can produce metre-scale positional uncertainty, and error depends on shoreline slope, vegetation, image timing and water level.
+Wetland/waterline studies comparing high-resolution imagery with field or independent reference boundaries show that mapped shoreline/wetland boundaries retain nonzero positional uncertainty due to spatial resolution, georegistration, slope, vegetation and image timing.
 
 Example:
 
 **Coastal Wetland Shoreline Change Monitoring: A Comparison of Shorelines from High-Resolution WorldView Satellite Imagery, Aerial Imagery, and Field Surveys** (2021), *Remote Sensing* 13, 3030. DOI: **10.3390/rs13153030**.
 
-The study reported approximately metre-scale mean shoreline agreement but substantially larger local deviations under difficult boundary conditions.
-
 Evidence class: **BOUNDARY POSITIONAL-UNCERTAINTY ANALOGUE**.
 
 Use in EGHM:
-- demonstrates why a small polygon's area error can be controlled by boundary-position uncertainty even when imagery is high resolution;
-- supports quantifying boundary-position uncertainty rather than assigning a generic percent accuracy.
+- supports quantifying boundary-position uncertainty rather than assigning a generic percent error;
+- relevant even with 0.5-m imagery because mixed shoreline/vegetation pixels and orthorectification error may shift interpreted edges.
 
 Domain caveat:
-- coastal/tidal wetland shoreline behaviour is not directly transferable to a small montane pond; use only for the methodological principle that mapped shoreline position has nonzero uncertainty.
+- coastal shoreline dynamics are not directly transferable to a montane pond; use only for the methodological principle.
 
 ---
 
-# Q9. Thieler & Danforth (1994) — extracting change from historical imagery
+# Q8. Thieler & Danforth (1994) — historical imagery positioning error
 
 Thieler, E.R. & Danforth, W.W. (1994). **Historical shoreline mapping (I): improving techniques and reducing positioning errors.** *Journal of Coastal Research*, 10(3), 549–563.
 
 Evidence class: **HISTORICAL IMAGERY / POSITIONAL ERROR FRAMEWORK**.
 
 Key support:
-- historical image/map boundary-change studies contain multiple sources of positional error, including georeferencing, digitization and source-image limitations;
-- these errors should be quantified to distinguish technological/mapping noise from true spatial change.
+- historical boundary-change studies contain source-image, georeferencing and digitization errors;
+- these components should be documented/quantified to distinguish mapping noise from true change.
 
 Use in EGHM:
-- methodological analogue for historical pond-boundary mapping;
-- reinforces the need to recover orthorectification/source resolution and digitization information for each year.
+- methodological analogue for the seven-date airborne-image pond series.
 
 ---
 
-# Q10. Polygon-area uncertainty
-
-Recent GIS work explicitly shows that polygon-area estimates have uncertainty related to positional/vertex error and polygon geometry:
+# Q9. Polygon-area uncertainty
 
 **About polygon area uncertainty in GIS and its implications on agro-forestry estimates** (2024), *Ecological Informatics*, 81, 102617. DOI: **10.1016/j.ecoinf.2024.102617**.
 
 Evidence class: **VECTOR AREA-UNCERTAINTY METHOD**.
 
 Use in EGHM:
-- supports propagating boundary/vertex uncertainty into polygon area rather than assuming that the numeric GIS area returned to several decimals is known to that precision;
-- especially relevant because current pond areas are reported to approximately 0.001–0.01 m² numerical precision while real mapping uncertainty is necessarily much larger.
-
-Important distinction:
-- GIS numerical area precision is not observational accuracy.
+- supports propagating boundary/vertex positional uncertainty into polygon-area uncertainty;
+- reinforces that GIS-computed areas reported to many decimals have numerical precision, not equivalent observational accuracy.
 
 ---
 
-# Q11. Audit of the 2023 Random Forest classification workflow
+# Q10. Audit of the 2023 Random Forest classification workflow
 
 Archived code: `seoyeongari_rf_plot2023_cells.R`.
 
 The script:
 
-1. uses `plot_2023.shp` cells/polygons as the positive water/lake training label;
+1. uses `plot_2023.shp` as the positive water/lake training label;
 2. uses pixels outside `plot_2023.shp` as negative/non-lake training data;
 3. trains a Random Forest on RGB-derived spectral/texture features;
-4. selects the final water-probability threshold by **maximizing IoU against the same `plot_2023` label mask**;
+4. selects the final probability threshold by maximizing IoU against the same `plot_2023` label mask;
 5. reports precision, recall, IoU and F1 against `plot_2023`.
 
 ### Consequence
 
 This workflow is useful for:
-- checking whether RGB/texture information can reproduce the manually supplied 2023 label pattern;
-- diagnostic visualization of dark forest/shadow confusion;
-- producing a reproducible alternative boundary consistent with the supplied training label.
+- testing whether RGB/texture information reproduces the manually supplied 2023 label pattern;
+- diagnosing dark-forest/shadow confusion;
+- generating a reproducible classifier consistent with the supplied label.
 
-It is **not an independent validation of `plot_2023.shp`** because the reference polygon is used both to generate training labels and to optimize the classification threshold.
+It is **not an independent validation of `plot_2023.shp`**, because the polygon provides both training/reference information and threshold-selection information.
 
 Therefore:
 
 **DO NOT report its IoU/F1 as independent evidence that the 2023 observational boundary is accurate.**
 
-This would be circular validation and would conflict with the independence principles emphasized by Stehman & Foody (2019).
-
-The RF workflow can remain in the reproducibility archive as a classification diagnostic.
+The RF workflow remains useful as a classification diagnostic only.
 
 ---
 
-# Q12. Recommended observation-uncertainty protocol for Seoyeongari
+# Q11. Site-scale uncertainty protocol now appropriate for Seoyeongari
 
-Given the very small study area and only six observation years, a full regional Olofsson-style probability sample is unnecessary and may be awkward. A better site-scale protocol is:
+Because the core image method is already known (0.5-m orthorectified April/May airborne images + manual digitization), the next uncertainty work should be focused rather than reconstructing the whole method from scratch.
 
-## Level 1 — recover source provenance
+## Level 1 — finish metadata recovery
 
-For each mapped year record:
+For each year record:
 
-- image provider/platform;
-- acquisition date and season;
-- native spatial resolution;
-- orthorectification/georegistration metadata;
-- coordinate reference system;
-- visual/spectral criterion for open-water edge;
-- operator/software;
-- original polygon file and checksum.
+- provider/dataset identifier;
+- exact acquisition date;
+- orthorectification/georegistration accuracy;
+- CRS;
+- source image path/URL and checksum;
+- original polygon path/checksum.
 
 ## Level 2 — repeated independent delineation
 
-Where the source image is available:
+Where the original image is available:
 
-- have the same operator redraw the pond boundary blindly at least 2–3 times, or preferably use two independent interpreters;
-- do not show the previous polygon while redrawing;
+- blindly redraw the water-body boundary 2–3 times, or use a second independent interpreter;
+- do not display the previous polygon during redraw;
 - calculate area spread and boundary displacement.
 
-This directly estimates interpretation/digitization uncertainty at the site scale.
+This directly estimates manual interpretation/digitization uncertainty.
 
 ## Level 3 — positional-error envelope
 
-For each image, combine known positional-error components where available, such as:
+Combine available components such as:
 
-- image pixel/resolution contribution;
-- georegistration error;
-- manual edge-selection/digitization error.
+- 0.5-m image resolution;
+- image georegistration/orthorectification RMSE;
+- repeated manual edge-selection error.
 
-Propagate these to a boundary buffer / polygon-area envelope rather than inventing a universal percent error.
+Propagate these to polygon-area uncertainty using a boundary buffer or Monte Carlo vertex/edge perturbation approach.
+
+Do not invent a universal fixed percentage.
 
 ## Level 4 — model reporting
 
-Keep the current observed area as the central mapped estimate, but report mapping uncertainty separately.
+Keep the current mapped area as the central observation and report the uncertainty interval separately.
 
-Do **not** refit the model simply to force predictions inside an uncertainty envelope.
+Do **not** refit EGHM simply to force predictions inside the observational uncertainty envelope.
 
-If uncertainty is quantified, useful diagnostics include:
+Useful diagnostics once intervals exist:
 - RMSE relative to mapping uncertainty;
-- number of model predictions falling within observation intervals;
-- sensitivity of scenario ranking to plausible observation perturbations.
+- predictions inside/outside mapped-area intervals;
+- scenario-ranking stability under plausible observation perturbations.
 
 ---
 
-# Q13. Implication for current 29.9 m² Integrated RMSE
+# Q12. Implication for current 29.9 m² Integrated RMSE
 
-At present there is **no defensible basis to state that 29.9 m² is larger or smaller than observational mapping uncertainty**, because the historical imagery and delineation-error metadata have not yet been fully recovered.
+The historical mapping method is now sufficiently documented to state that observations come from standardized 0.5-m orthorectified spring airborne imagery manually digitized in QGIS.
 
-Therefore the central manuscript should currently say:
+However, **there is still no quantified positional/repeated-delineation uncertainty**, so there is not yet a defensible basis to say whether 29.9 m² is above or below observational uncertainty.
 
-> Model fit was evaluated against mapped open-water-area estimates from six observation years. Because full historical image/delineation uncertainty could not yet be reconstructed, RMSE represents disagreement with the mapped estimates rather than error relative to an assumed error-free ground truth.
+Manuscript-safe wording:
 
-If source imagery is recovered, this statement can be strengthened with explicit observation intervals.
+> Open-water areas were manually delineated from orthorectified 0.5-m airborne imagery acquired in April–May. Model error metrics quantify disagreement with these mapped area estimates; positional and manual delineation uncertainty was not independently quantified and therefore the mapped polygons were not treated as error-free ground truth.
+
+If original images and registration metadata are recovered, this can be strengthened with explicit uncertainty intervals.
 
 ---
 
-# Q14. Decimal precision rule
+# Q13. Decimal precision rule
 
-Historical GIS calculations produce areas with many decimal places, but final manuscript tables should not imply centimetre-scale boundary accuracy.
+Historical GIS calculations produce area values with many decimal places, but final manuscript tables should not imply centimetre-scale boundary accuracy.
 
 Recommended reporting:
-- keep full values internally for reproducibility/calculation;
-- present pond areas to approximately **1 m²** or another precision justified by the eventual image-resolution audit;
-- preserve raw shapefile-computed values in supplementary data.
-
-This separates numerical precision from measurement accuracy.
+- keep full polygon-computed values internally for reproducibility/calculation;
+- present pond areas to approximately **1 m²** unless a more precise observation uncertainty is demonstrated;
+- preserve the raw values in supplementary/reproducibility data.
 
 ---
 
-# Q15. Highest-priority data recovery after this audit
+# Q14. Highest-priority data recovery
 
-1. Original historical source images for 2011, 2013, 2015, 2017, 2019, 2021 and 2023.
-2. Original corresponding pond polygons/shapefiles for each year.
-3. GIS project or notes that identify image platform, acquisition dates and digitization criteria.
-4. Any repeated/manual validation files generated during the original thesis work.
-5. Independent 2023 field/drone boundary evidence, if one exists, that was **not** derived from `plot_2023.shp`.
-
-Until those are recovered, the model itself should not be structurally modified in response to unknown observation error.
+1. Provider/dataset metadata and exact date for the 2011, 2013, 2015, 2017, 2019, 2021 and 2023 0.5-m orthorectified airborne images.
+2. Original source image files or stable archival links.
+3. Original year-specific pond polygons and checksums.
+4. Orthorectification/georegistration accuracy metadata.
+5. Independent or repeated manual delineations for direct uncertainty estimation.
+6. Independent 2023 field/drone boundary evidence, if available and not derived from `plot_2023.shp`.
 
 ---
 
-# Q16. Net judgement
+# Q15. Net judgement
 
-**The six-year observation series remains usable, but its uncertainty is presently under-documented.**
+**The six-year observation series has a documented core mapping method and remains suitable for the current model comparison.**
 
-This is a reporting/provenance priority rather than a reason to discard the model or the area series.
+Its remaining weakness is not unknown image resolution/method, but **unquantified positional and manual delineation uncertainty**.
 
 The 2023 RF workflow is not an independent accuracy assessment and must not be presented as one.
 
-The next scientifically valuable step is source-image/polygon recovery and independent boundary uncertainty estimation. Once that is available, observation uncertainty can be propagated into the scenario comparison without introducing new fitted ecohydrological parameters.
+The next high-value observation task is therefore metadata completion plus repeated/independent boundary uncertainty estimation, not replacement of the current area series.
