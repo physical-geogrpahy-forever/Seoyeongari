@@ -31,7 +31,7 @@ The high-value next step is reference/provenance auditing, transparent classific
 | K_hydro | Converts H (m3) to area effect (m2), units m-1 | Calibrated observation-operator scale; not a physical conductivity | EMPIRICAL BUT TRANSPARENT | Keep only with explicit wording that this is an effective observation operator |
 | K_colonizable | Converts dimensionless occupation to area effect | Calibrated observation-operator area scale | EMPIRICAL BUT INTERPRETABLE | Keep; do not present as a biological rate |
 | Peat effect | Peat/persistent surface rise reduces surface expression of open water through the same hypsometry; no water is destroyed | Biogeomorphic logic reasonable | MODERATE | Keep as scenario component |
-| Persistent peat rate 0.29–0.47 mm yr-1, reference 0.38 | Site-informed long-term interval | Must distinguish preserved peat accumulation from actual surface-elevation change | IMPORTANT CAVEAT | Verify wording/provenance before final manuscript claim |
+| Persistent peat rate | Field-confirmed long-term values 0.29, 0.38, 0.47 mm yr-1; model reference = median 0.38 mm yr-1 | Independent field provenance; not selected by pond-area fit | STRONG PARAMETER PROVENANCE / ELEVATION-PROXY CAVEAT | Keep field median as central value; distinguish preserved peat accumulation from direct surface-elevation measurement |
 | Recent 2.89–7.00 mm yr-1 | Upper stress test only | Recent accumulation need not equal persistent elevation gain | APPROPRIATE AS STRESS TEST | Do not use as primary long-term geomorphic rate |
 
 ## Key literature
@@ -65,7 +65,7 @@ This does not invalidate the model because these OAT values are calibration-sear
 
 ## Scenario-comparison fairness
 
-At the Stage51 0.38 mm yr-1 reference:
+At the Stage51 field-confirmed median peat rate 0.38 mm yr-1:
 
 - Integrated: RMSE 29.861 m2; nRMSE 1.463%
 - Hydrosere Only: RMSE 33.095 m2; nRMSE 1.621%
@@ -85,7 +85,7 @@ This is only a small-sample diagnostic and should not replace the process-based 
 
 ### 1. Peat accumulation versus actual surface-elevation change — HIGH priority
 
-Confirm what the 0.29–0.47 mm yr-1 site value physically represents. If it is an age-depth/preserved peat accumulation rate rather than measured surface-elevation change, the manuscript must not call it a directly measured annual surface-rise rate. The model can still use it as a persistent-net biogeomorphic sensitivity, but this distinction must be explicit.
+The central peat rate itself is no longer a calibration concern: 0.38 mm yr-1 is the median of independently field-confirmed long-term peat accretion values (0.29, 0.38, 0.47 mm yr-1). The remaining issue is physical interpretation. If these are age-depth/preserved peat accumulation rates rather than directly measured surface-elevation changes, the manuscript must not call 0.38 mm yr-1 a directly measured annual surface-rise rate. The model can use the field median as a persistent-net biogeomorphic proxy, but that distinction must be explicit.
 
 ### 2. Hypsometry — HIGH value only if independent topographic/bathymetric data exist
 
@@ -105,7 +105,7 @@ Kc and Kh are still calibrated mappings from mechanistic/ecological state variab
 
 ### 6. Sensitivity terminology — HIGH reporting priority
 
-Stage52 OAT bounds are admissible calibration-search support, not independently measured uncertainty intervals. In the manuscript call this a parameter-perturbation/robustness analysis. Reserve stronger physical-uncertainty language for the independently motivated peat-rate interval or for parameters with external constraints.
+Stage52 OAT bounds are admissible calibration-search support, not independently measured uncertainty intervals. In the manuscript call this a parameter-perturbation/robustness analysis. Reserve stronger physical-uncertainty language for the independently field-constrained peat-rate values or for parameters with external constraints.
 
 ## Freeze recommendation
 
