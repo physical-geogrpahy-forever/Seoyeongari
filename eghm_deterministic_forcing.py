@@ -10,6 +10,10 @@ Only the final daily forcing values are rounded to IEEE-754 binary64.
 Scientific equations and meteorological constants are unchanged. Numerical
 implementation is changed solely to make the forcing reproducible across
 heterogeneous runners.
+
+The default range remains exactly 2011-01-01 through 2023-12-31. Optional date
+arguments exist only to permit forward diagnostic runs where raw AWS/ASOS data
+are available; they do not alter the frozen default forcing contract.
 """
 from __future__ import annotations
 
@@ -29,6 +33,8 @@ LAT = Decimal('33.30456')
 ALT = Decimal('188.42')
 CN = Decimal('68')
 MP_DPS = 80
+DEFAULT_START = datetime(2011, 1, 1)
+DEFAULT_END = datetime(2023, 12, 31)
 
 
 def _open_text_fallback(path: Path):
@@ -77,15 +83,25 @@ def _interp_fixed(vals: List[Optional[Decimal]]) -> List[Decimal]:
     return [v if v is not None else Decimal('0') for v in out]
 
 
-def _read_raw() -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int]]:
+def _read_raw(
+    start_date: datetime = DEFAULT_START,
+    end_date: datetime = DEFAULT_END,
+) -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int]]:
+    start_date = start_date if isinstance(start_date, datetime) else datetime.fromisoformat(str(start_date))
+    end_date = end_date if isinstance(end_date, datetime) else datetime.fromisoformat(str(end_date))
+    if end_date < start_date:
+        raise ValueError('end_date must be >= start_date')
+
     aws_text = _open_text_fallback(AWS)
     reader = csv.DictReader(aws_text.splitlines())
     rows = []
     for r in reader:
         dt = datetime.strptime(r['time'].strip(), '%Y-%m-%d')
-        if datetime(2011, 1, 1) <= dt <= datetime(2023, 12, 31):
+        if start_date <= dt <= end_date:
             rows.append((dt, r))
     rows.sort(key=lambda z: z[0])
+    if not rows:
+        raise ValueError(f'no AWS rows in requested range {start_date.date()}..{end_date.date()}')
 
     # ASOS daily sunshine: exact decimal average per date, then zero when absent.
     asos_text = _open_text_fallback(ASOS)
@@ -98,6 +114,8 @@ def _read_raw() -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int
         try:
             dt = datetime.strptime(str(r['time']).strip(), '%Y-%m-%d')
         except Exception:
+            continue
+        if dt < start_date or dt > end_date:
             continue
         # Match legacy Stage30: filter station 189 only when decoded header is '지점'.
         if '지점' in r:
@@ -137,9 +155,12 @@ def _read_raw() -> Tuple[List[datetime], Dict[str, List[Decimal]], Dict[str, int
     }, source_missing
 
 
-def source_missing_before_fill() -> Dict[str, int]:
+def source_missing_before_fill(
+    start_date: datetime = DEFAULT_START,
+    end_date: datetime = DEFAULT_END,
+) -> Dict[str, int]:
     """Missing values in the source daily series before deterministic filling."""
-    _, _, missing = _read_raw()
+    _, _, missing = _read_raw(start_date=start_date, end_date=end_date)
     return dict(missing)
 
 
@@ -151,8 +172,11 @@ def _clip_m(x: mp.mpf, lo: mp.mpf, hi: mp.mpf) -> mp.mpf:
     return lo if x < lo else hi if x > hi else x
 
 
-def deterministic_forcing():
-    dates, x, source_missing = _read_raw()
+def deterministic_forcing(
+    start_date: datetime = DEFAULT_START,
+    end_date: datetime = DEFAULT_END,
+):
+    dates, x, source_missing = _read_raw(start_date=start_date, end_date=end_date)
     mp.mp.dps = MP_DPS
 
     pi = mp.pi
@@ -244,7 +268,7 @@ def deterministic_forcing():
     annual: Dict[int, float] = {}
     with localcontext() as ctx:
         ctx.prec = 50
-        for y in range(2011, 2024):
+        for y in range(dates[0].year, dates[-1].year + 1):
             annual[y] = float(sum((x['pre'][i] for i, d in enumerate(dates) if d.year == y), Decimal('0')))
     cleaned = {
         k: np.asarray([float(v) for v in x[k]], dtype=float)
@@ -253,7 +277,7 @@ def deterministic_forcing():
 
     # Preserve Stage30 bookkeeping semantics: sunshine was zero-filled before
     # its `raw_missing` count, while AWS temperature/wind counts were reported
-    # before interpolation.  The true source-level sunshine count is exposed
+    # before interpolation. The true source-level sunshine count is exposed
     # separately by source_missing_before_fill().
     forcing_missing = dict(source_missing)
     forcing_missing['sun'] = 0
