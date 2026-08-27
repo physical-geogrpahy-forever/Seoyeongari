@@ -1,43 +1,46 @@
-name: Stage74 hydroperiod hazard identifiability
+name: Stage75 cumulative-exposure ET feedback
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage74:
+  stage75:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage74 identifiability profile
-        run: python stage74_hydroperiod_hazard_identifiability.py
+      - name: Run Stage75 ET feedback test
+        run: python stage75_cumulative_exposure_et_feedback.py
       - name: Show summary
-        run: cat stage74_outputs/stage74_summary.json
+        run: cat stage75_outputs/stage75_summary.json
       - name: Enforce data and physical contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage74_outputs/stage74_summary.json').read_text())
-          if d.get('status') != 'PASS_STAGE74_IDENTIFIABILITY_PROFILE': raise SystemExit('Stage74 failed')
+          d=json.loads(pathlib.Path('stage75_outputs/stage75_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE75_REFERENCE_BOUNDED_ET_FEEDBACK_TEST': raise SystemExit('Stage75 failed')
           if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
-          if d.get('hydrology_changed') is not False or d.get('peat_rate_changed') is not False: raise SystemExit('process changed')
           if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
+          # Kterr direction and accuracy are scientific outputs, not acceptance gates.
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage74-${{ matrix.os }}
+          name: stage75-${{ matrix.os }}
           path: |
-            stage74_outputs/
+            stage75_outputs/
+            stage75_cumulative_exposure_et_feedback.py
             stage74_hydroperiod_hazard_identifiability.py
-            stage73_reference_ecological_rule_search.py
+            STAGE73_74_ECO_RULE_DECISION_LOG.md
             eghm_deterministic_scenarios.py
             eghm_deterministic_kernel.py
+            eghm_deterministic_forcing.py
+            eghm_deterministic_geometry.py
           retention-days: 30
