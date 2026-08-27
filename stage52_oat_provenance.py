@@ -4,10 +4,10 @@
 Two sensitivity questions are intentionally separated:
 
 A. FIXED-COEFFICIENT OAT (primary robustness test)
-   The central 0.38 mm/yr four-scenario observation-operator coefficients are
-   locked once. One hydrologic/ecological process parameter is then changed at
-   a time. No Kc/Kh refitting is allowed. This asks whether the *locked model*
-   and scenario ranking are robust.
+   The central field-median peat-rate four-scenario observation-operator
+   coefficients are locked once. One hydrologic/ecological process parameter is
+   then changed at a time. No Kc/Kh refitting is allowed. This asks whether the
+   *locked model* and scenario ranking are robust.
 
 B. PROFILE-REFIT OAT (secondary calibration diagnostic)
    For the same one-at-a-time process perturbation, Kc/Kh are refitted using all
@@ -16,8 +16,9 @@ B. PROFILE-REFIT OAT (secondary calibration diagnostic)
 
 The tested values are the Stage45/49 admissible calibration-search values,
 excluding outer guard values. They are not relabelled as independently measured
-physical ranges. The central persistent peat rate is fixed at 0.38 mm/yr, the
-midpoint of the site-informed long-term 0.29--0.47 mm/yr interval. Peat-rate
+physical ranges. The central persistent peat rate is inherited from Stage51 as
+the median of independently field-confirmed long-term persistent peat accretion
+values (0.29, 0.38, 0.47 mm/yr), not selected by pond-area fitting. Peat-rate
 sensitivity itself was handled separately in Stage51.
 
 No criterion favors Integrated. Scenario rank is always an output.
@@ -30,12 +31,13 @@ import numpy as np
 import pandas as pd
 
 import stage50_four_scenario_peat_sensitivity as m
+import stage51_persistent_peat_sensitivity as s51
 from stage45_expanded_hydrology_nested import annual_hydro
 from stage49_six_observation_irreversible_recruitment import irreversible_state, annual
 
 OUT = Path('stage52_outputs')
 OUT.mkdir(exist_ok=True)
-PEAT_RATE = 0.38
+PEAT_RATE = float(s51.CENTRAL_RATE)
 
 # Admissible values from Stage45/49 after removing explicit outer guard values.
 OAT = {
@@ -69,8 +71,8 @@ PROVENANCE = [
      'Trailing window used to form the return-flow anomaly H; H has units m3.'),
     ('est_window_d', 7, 'day', 'process timing parameter within literature-bounded search',
      'Minimum continuous antecedent exposure window used to create recruitment pressure.'),
-    ('peat_rate_persistent', 0.38, 'mm yr-1', 'site-informed long-term persistent-net reference',
-     'Midpoint of the site-informed 0.29-0.47 mm/yr long-term interval; not selected by fit optimization.'),
+    ('peat_rate_persistent', PEAT_RATE, 'mm yr-1', 'field-confirmed long-term persistent-rate median',
+     'Median of independently field-confirmed long-term persistent peat accretion values 0.29, 0.38 and 0.47 mm/yr; not selected by pond-area fit optimization.'),
     ('K_colonizable_integrated', 1835.7764495736299, 'm2', 'calibrated observation-operator area scale',
      'Maps dimensionless ecological occupation state S to open-water area effect; fitted to six observed years.'),
     ('K_hydro_integrated', 0.006134764828277183, 'm-1', 'calibrated observation-operator hydrologic scale',
@@ -200,7 +202,7 @@ def main():
     bdf=pd.DataFrame(byp)
     bdf.to_csv(OUT/'stage52_oat_integrated_rank_by_parameter.csv',index=False)
 
-    # Central metrics from the locked 0.38 mm/yr configuration.
+    # Central metrics from the locked field-median peat-rate configuration.
     central=[]
     for name,b in central_coeff.items():
         pred=predict_with_coeff(name,S0,H0,G0,b['Kc'],b['Kh'])
@@ -213,6 +215,8 @@ def main():
         'observed_area_years':[int(y) for y in m.YEARS],
         'pond_area_observation_2022':'ABSENT',
         'persistent_peat_rate_mm_yr':PEAT_RATE,
+        'persistent_peat_rate_reference_statistic':'median of independently field-confirmed long-term values',
+        'field_confirmed_persistent_rates_mm_yr':list(s51.FIELD_CONFIRMED_PERSISTENT_RATES_MM_YR),
         'sensitivity_primary':'fixed observation-operator coefficients; one process parameter changed at a time',
         'sensitivity_secondary':'profile-refit Kc/Kh; calibration diagnostic only',
         'oat_values_source':'Stage45/49 admissible calibration-search values after removing explicit outer guards; not independent measurement ranges',
