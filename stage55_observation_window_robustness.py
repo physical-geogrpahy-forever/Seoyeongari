@@ -164,30 +164,30 @@ def main():
     df = pd.DataFrame(all_rows)
     dd = pd.DataFrame(direct_rows)
     df.to_csv(OUT / 'stage55_window_scenario_all.csv', index=False)
-    df[df.mode == 'fixed_transfer'].to_csv(OUT / 'stage55_window_fixed_transfer.csv', index=False)
-    df[df.mode == 'profile_refit'].to_csv(OUT / 'stage55_window_profile_refit.csv', index=False)
+    df[df['mode'] == 'fixed_transfer'].to_csv(OUT / 'stage55_window_fixed_transfer.csv', index=False)
+    df[df['mode'] == 'profile_refit'].to_csv(OUT / 'stage55_window_profile_refit.csv', index=False)
     dd.to_csv(OUT / 'stage55_window_direct_hydraulic_area.csv', index=False)
 
     summary_rows = []
     for window in WINDOWS:
         for mode in ['fixed_transfer', 'profile_refit']:
-            x = df[(df.window == window) & (df.mode == mode)]
-            integ = x[x.Scenario == 'Integrated Model'].iloc[0]
-            hyd = x[x.Scenario == 'Hydrosere Only Model'].iloc[0]
+            x = df[(df['window'] == window) & (df['mode'] == mode)]
+            integ = x[x['Scenario'] == 'Integrated Model'].iloc[0]
+            hyd = x[x['Scenario'] == 'Hydrosere Only Model'].iloc[0]
             summary_rows.append({
                 'window': window,
                 'mode': mode,
-                'Integrated_nRMSE_pct': float(integ.nRMSE_pct),
+                'Integrated_nRMSE_pct': float(integ['nRMSE_pct']),
                 'Integrated_rank': int(integ['rank']),
-                'Hydrosere_nRMSE_pct': float(hyd.nRMSE_pct),
-                'Integrated_minus_Hydrosere_nRMSE_pp': float(integ.nRMSE_pct - hyd.nRMSE_pct),
-                'top_scenario': str(x.sort_values('nRMSE_pct').iloc[0].Scenario),
+                'Hydrosere_nRMSE_pct': float(hyd['nRMSE_pct']),
+                'Integrated_minus_Hydrosere_nRMSE_pp': float(integ['nRMSE_pct'] - hyd['nRMSE_pct']),
+                'top_scenario': str(x.sort_values('nRMSE_pct').iloc[0]['Scenario']),
             })
     sd = pd.DataFrame(summary_rows)
     sd.to_csv(OUT / 'stage55_window_summary.csv', index=False)
 
-    current = sd[sd.window == CURRENT_WINDOW]
-    alt = sd[sd.window != CURRENT_WINDOW]
+    current = sd[sd['window'] == CURRENT_WINDOW]
+    alt = sd[sd['window'] != CURRENT_WINDOW]
 
     summary = {
         'status': 'PASS_STAGE55_TEMPORAL_SUPPORT_AUDIT',
@@ -201,8 +201,8 @@ def main():
         'profile_refit_definition': 'only Kc/Kh refit within each window; process parameters fixed',
         'current_window_summary': current.to_dict('records'),
         'alternative_window_summary': alt.to_dict('records'),
-        'fixed_transfer_integrated_rank1_window_count': int(((sd.mode == 'fixed_transfer') & (sd.Integrated_rank == 1)).sum()),
-        'profile_refit_integrated_rank1_window_count': int(((sd.mode == 'profile_refit') & (sd.Integrated_rank == 1)).sum()),
+        'fixed_transfer_integrated_rank1_window_count': int(((sd['mode'] == 'fixed_transfer') & (sd['Integrated_rank'] == 1)).sum()),
+        'profile_refit_integrated_rank1_window_count': int(((sd['mode'] == 'profile_refit') & (sd['Integrated_rank'] == 1)).sum()),
         'n_windows': len(WINDOWS),
         'direct_hydraulic_area': dd.to_dict('records'),
         'physical_closure': {
