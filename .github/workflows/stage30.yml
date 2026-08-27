@@ -1,10 +1,10 @@
-name: Stage73 literature-bounded ecological rule search
+name: Stage74 hydroperiod hazard identifiability
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage73:
+  stage74:
     strategy:
       fail-fast: false
       matrix:
@@ -17,35 +17,27 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage73 literature-bounded ecological rule search
-        run: python stage73_reference_ecological_rule_search.py
+      - name: Run Stage74 identifiability profile
+        run: python stage74_hydroperiod_hazard_identifiability.py
       - name: Show summary
-        run: cat stage73_outputs/stage73_summary.json
+        run: cat stage74_outputs/stage74_summary.json
       - name: Enforce data and physical contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage73_outputs/stage73_summary.json').read_text())
-          if d.get('status') != 'PASS_STAGE73_REFERENCE_BOUNDED_RULE_SEARCH':
-              raise SystemExit('Stage73 failed')
-          if d.get('pond_area_observation_2022') != 'ABSENT':
-              raise SystemExit('2022 pond-area observation must remain absent')
-          if d.get('hydrology_changed') is not False or d.get('peat_rate_changed') is not False:
-              raise SystemExit('Stage73 must not change hydrology or peat rate')
-          wb=d.get('physical_closure',{})
-          if max(wb.values()) > 1e-8:
-              raise SystemExit('physical closure failed')
-          # Accuracy ranking and LOOCV are outputs only, not acceptance gates.
+          d=json.loads(pathlib.Path('stage74_outputs/stage74_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE74_IDENTIFIABILITY_PROFILE': raise SystemExit('Stage74 failed')
+          if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
+          if d.get('hydrology_changed') is not False or d.get('peat_rate_changed') is not False: raise SystemExit('process changed')
+          if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage73-${{ matrix.os }}
+          name: stage74-${{ matrix.os }}
           path: |
-            stage73_outputs/
+            stage74_outputs/
+            stage74_hydroperiod_hazard_identifiability.py
             stage73_reference_ecological_rule_search.py
             eghm_deterministic_scenarios.py
             eghm_deterministic_kernel.py
-            eghm_deterministic_forcing.py
-            eghm_deterministic_geometry.py
-            EGHM_STRICT_MODEL_RULES.md
           retention-days: 30
