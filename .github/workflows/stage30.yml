@@ -1,40 +1,44 @@
-name: Stage49 six-observation integrated calibration
+name: Stage50 strict four-scenario peat sensitivity
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage49:
+  run-stage50:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage49 six-observation irreversible recruitment calibration
-        run: python stage49_six_observation_irreversible_recruitment.py
-      - name: Show Stage49 summary
+      - name: Run Stage50 strict four-scenario peat sensitivity
+        run: python stage50_four_scenario_peat_sensitivity.py
+      - name: Show Stage50 summary
         if: always()
-        run: cat stage49_outputs/stage49_summary.json || true
-      - name: Enforce six-observation physical/ecological gate
+        run: cat stage50_outputs/stage50_summary.json || true
+      - name: Enforce Stage50 contract
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage49_outputs/stage49_summary.json')
+          p=pathlib.Path('stage50_outputs/stage50_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_SIX_OBSERVATION_CALIBRATION':
-              raise SystemExit('Stage49 six-observation calibration failed')
-          if d.get('pond_area_observation_2022') != 'ABSENT_NOT_HOLDOUT':
-              raise SystemExit('2022 pond-area observation must remain absent')
+          if d.get('status') != 'PASS_STAGE50':
+              raise SystemExit('Stage50 failed')
+          if d.get('pond_area_observation_2022') != 'ABSENT':
+              raise SystemExit('2022 pond-area observation must be absent')
+          wb=d.get('water_balance',{})
+          if max(wb.values()) > 1e-8:
+              raise SystemExit('physical closure failed')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage49-six-observation-results
+          name: stage50-four-scenario-peat-sensitivity
           path: |
-            stage49_outputs/
+            stage50_outputs/
+            stage50_four_scenario_peat_sensitivity.py
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
