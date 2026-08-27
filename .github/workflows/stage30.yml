@@ -1,8 +1,40 @@
-name: EGHM maintenance
+name: Stage49 six-observation integrated calibration
 on:
+  push:
+    branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  maintenance:
+  run-stage49:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - run: echo "Workflow temporarily paused while the six-observation calibration contract is updated."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - name: Run Stage49 six-observation irreversible recruitment calibration
+        run: python stage49_six_observation_irreversible_recruitment.py
+      - name: Show Stage49 summary
+        if: always()
+        run: cat stage49_outputs/stage49_summary.json || true
+      - name: Enforce six-observation physical/ecological gate
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('stage49_outputs/stage49_summary.json')
+          d=json.loads(p.read_text()) if p.exists() else {}
+          if d.get('status') != 'PASS_SIX_OBSERVATION_CALIBRATION':
+              raise SystemExit('Stage49 six-observation calibration failed')
+          if d.get('pond_area_observation_2022') != 'ABSENT_NOT_HOLDOUT':
+              raise SystemExit('2022 pond-area observation must remain absent')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage49-six-observation-results
+          path: |
+            stage49_outputs/
+            EGHM_STRICT_MODEL_RULES.md
+          if-no-files-found: warn
+          retention-days: 30
