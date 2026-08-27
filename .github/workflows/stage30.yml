@@ -1,17 +1,17 @@
-name: Stage63 official deterministic four-scenario peat
+name: Stage64 official deterministic OAT
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage63:
+  stage64:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         replica: [1, 2]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       REPLICA: ${{ matrix.replica }}
     steps:
@@ -20,16 +20,16 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage63 deterministic four-scenario peat analysis
-        run: python stage63_official_deterministic_four_scenario_peat.py
+      - name: Run Stage64 deterministic OAT
+        run: python stage64_official_deterministic_oat.py
       - name: Show summary
-        run: cat stage63_outputs/stage63_summary.json
+        run: cat stage64_outputs/stage64_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage63-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage64-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage63_outputs/
-            stage63_official_deterministic_four_scenario_peat.py
+            stage64_outputs/
+            stage64_official_deterministic_oat.py
             eghm_deterministic_scenarios.py
             eghm_deterministic_kernel.py
             eghm_deterministic_forcing.py
