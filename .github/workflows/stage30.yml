@@ -1,10 +1,10 @@
-name: Stage58c OAT mutation audit
+name: Stage58d reproducible April-May OAT audit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage58c:
+  run-stage58d:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -13,19 +13,37 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage58c mutation audit
-        run: python stage58c_oat_mutation_audit.py
-      - name: Show Stage58c summary
+      - name: Run Stage58d reproducible OAT audit
+        run: python stage58d_reproducible_oat_audit.py
+      - name: Show Stage58d summary
         if: always()
-        run: cat stage58c_outputs/stage58c_summary.json || true
+        run: cat stage58d_outputs/stage58d_summary.json || true
+      - name: Enforce reproducibility and physical contract
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          d=json.loads(pathlib.Path('stage58d_outputs/stage58d_summary.json').read_text())
+          if d.get('status')!='PASS_STAGE58D_REPRODUCIBLE_OAT':
+              raise SystemExit('Stage58d failed')
+          if d.get('pond_area_observation_2022')!='ABSENT':
+              raise SystemExit('2022 pond-area observation must remain absent')
+          if max(d['central_consistency'].values())>1e-12:
+              raise SystemExit('central reproducibility failed')
+          if max(d['physical_closure'].values())>1e-8:
+              raise SystemExit('physical closure failed')
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage58c-oat-mutation-audit
+          name: stage58d-reproducible-aprmay-oat
           path: |
-            stage58c_outputs/
-            stage58c_oat_mutation_audit.py
+            stage58d_outputs/
+            stage58d_reproducible_oat_audit.py
             stage58_aprmay_oat_provenance.py
+            stage58b_central_consistency_audit.py
+            stage58c_oat_mutation_audit.py
             stage57_aprmay_four_scenario_peat.py
+            STAGE56_57_DECISION_LOG.md
+            EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
