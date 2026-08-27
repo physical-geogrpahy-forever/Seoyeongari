@@ -1,53 +1,50 @@
-name: Stage56 April-May metadata-aligned recalibration
+name: Stage57 April-May four-scenario peat comparison
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage56:
+  run-stage57:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage56 April-May recalibration
-        run: python stage56_aprmay_recalibration.py
-      - name: Show Stage56 summary
+      - name: Run Stage57 four-scenario peat comparison
+        run: python stage57_aprmay_four_scenario_peat.py
+      - name: Show Stage57 summary
         if: always()
-        run: cat stage56_outputs/stage56_summary.json || true
-      - name: Enforce unchanged Stage49 contract
+        run: cat stage57_outputs/stage57_summary.json || true
+      - name: Enforce physical and data contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage56_outputs/stage56_summary.json')
+          p=pathlib.Path('stage57_outputs/stage57_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_SIX_OBSERVATION_CALIBRATION':
-              raise SystemExit('Stage56 calibration did not produce a valid candidate')
-          if d.get('pond_area_observation_2022') != 'ABSENT_NOT_HOLDOUT':
+          if d.get('status') != 'PASS_STAGE57_ANALYSIS':
+              raise SystemExit('Stage57 analysis failed')
+          if d.get('pond_area_observation_2022') != 'ABSENT':
               raise SystemExit('2022 pond-area observation must remain absent')
-          if d.get('evaluation_window_selected_by_fit') is not False:
-              raise SystemExit('April-May window must be metadata-selected, not fit-selected')
-          if d.get('parameter_grids_changed_from_stage49') is not False:
-              raise SystemExit('Stage49 grids must remain unchanged')
-          if d.get('physical_process_structure_changed_from_stage49') is not False:
-              raise SystemExit('Stage49 process structure must remain unchanged')
-          sel=d.get('selected') or {}
-          if max(sel.get('max_mass_error_m3',1),sel.get('max_area_partition_error_m2',1),sel.get('max_precip_partition_error_m3',1)) > 1e-8:
+          if d.get('observation_support') != 'April-May':
+              raise SystemExit('Stage57 must use metadata-aligned April-May support')
+          wb=d.get('physical_closure',{})
+          if max(wb.values()) > 1e-8:
               raise SystemExit('physical closure failed')
+          # Scenario rank and peat response are reported outputs, not acceptance gates.
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage56-aprmay-recalibration
+          name: stage57-aprmay-four-scenario-peat
           path: |
-            stage56_outputs/
+            stage57_outputs/
+            stage57_aprmay_four_scenario_peat.py
             stage56_aprmay_recalibration.py
-            stage49_six_observation_irreversible_recruitment.py
-            stage38_domain_corrected.py
             STAGE55_DECISION_LOG.md
+            STAGE54_DECISION_LOG.md
             EGHM_REFERENCE_LEDGER_SUPPLEMENT_08.md
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
