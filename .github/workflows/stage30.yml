@@ -1,10 +1,10 @@
-name: Stage57 April-May four-scenario peat comparison
+name: Stage58 April-May process OAT robustness
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage57:
+  run-stage58:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -13,38 +13,38 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage57 four-scenario peat comparison
-        run: python stage57_aprmay_four_scenario_peat.py
-      - name: Show Stage57 summary
+      - name: Run Stage58 OAT robustness
+        run: python stage58_aprmay_oat_provenance.py
+      - name: Show Stage58 summary
         if: always()
-        run: cat stage57_outputs/stage57_summary.json || true
+        run: cat stage58_outputs/stage58_summary.json || true
       - name: Enforce physical and data contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage57_outputs/stage57_summary.json')
+          p=pathlib.Path('stage58_outputs/stage58_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
-          if d.get('status') != 'PASS_STAGE57_ANALYSIS':
-              raise SystemExit('Stage57 analysis failed')
+          if d.get('status') != 'PASS_STAGE58_ANALYSIS':
+              raise SystemExit('Stage58 analysis failed')
           if d.get('pond_area_observation_2022') != 'ABSENT':
               raise SystemExit('2022 pond-area observation must remain absent')
           if d.get('observation_support') != 'April-May':
-              raise SystemExit('Stage57 must use metadata-aligned April-May support')
+              raise SystemExit('Stage58 must use April-May support')
           wb=d.get('physical_closure',{})
           if max(wb.values()) > 1e-8:
               raise SystemExit('physical closure failed')
-          # Scenario rank and peat response are reported outputs, not acceptance gates.
+          # Rank and OAT performance are diagnostic outputs only.
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage57-aprmay-four-scenario-peat
+          name: stage58-aprmay-process-oat
           path: |
-            stage57_outputs/
+            stage58_outputs/
+            stage58_aprmay_oat_provenance.py
             stage57_aprmay_four_scenario_peat.py
-            stage56_aprmay_recalibration.py
+            STAGE56_57_DECISION_LOG.md
             STAGE55_DECISION_LOG.md
-            STAGE54_DECISION_LOG.md
             EGHM_REFERENCE_LEDGER_SUPPLEMENT_08.md
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
