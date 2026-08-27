@@ -27,16 +27,16 @@ Stage49 six-observation fit: RMSE 33.10 m2; nRMSE 1.622%. Physical closure error
 
 ## Stage51 persistent peat interpretation
 
-Recent apparent surface peat accumulation is not automatically interpreted as sustained topographic rise. Primary geomorphic sensitivity uses the independently field-confirmed long-term persistent-net peat accretion values 0.29, 0.38 and 0.47 mm yr-1. The central/reference value is their sample median, 0.38 mm yr-1. It is not selected by pond-area fit optimization and is not an arbitrary numerical midpoint. The recent 2.89–7.00 mm yr-1 range is retained only as an upper stress test.
+Recent apparent surface peat accumulation is not automatically interpreted as sustained topographic rise. The Seoyeongari field report, using a Clymo-model calculation constrained by the available radiocarbon result, reports long-term peat accumulation as lower/central/upper estimates of 0.29/0.38/0.47 mm yr-1. These are not three independent replicate measurements. The central/reference model value is the field-derived central estimate 0.38 mm yr-1. It is not selected by pond-area fit optimization. The recent 2.89–7.00 mm yr-1 range is retained only as an upper stress test.
 
-At the field-median rate 0.38 mm yr-1:
+At the field-derived central rate 0.38 mm yr-1:
 
 1. Integrated — RMSE 29.861 m2; nRMSE 1.463%.
 2. Hydrosere Only — RMSE 33.095 m2; nRMSE 1.621%.
 3. Eco-Geo Only — RMSE 216.254 m2; nRMSE 10.595%.
 4. Baseline — RMSE 222.418 m2; nRMSE 10.897%.
 
-Integrated is rank 1 across all three field-confirmed primary persistent-net peat rates 0.29, 0.38 and 0.47 mm yr-1. This rank is an output, not a gate or objective term.
+Integrated is rank 1 across all three reported long-term peat-rate estimates 0.29, 0.38 and 0.47 mm yr-1. This rank is an output, not a gate or objective term.
 
 ## Stage52 OAT and provenance
 
@@ -45,7 +45,7 @@ Stage52 separates:
 - fixed-coefficient OAT: central Kc/Kh locked; tests robustness of the locked model;
 - profile-refit OAT: Kc/Kh refitted after each process perturbation; tests recalibration capability, not fixed-model robustness.
 
-The peat rate used for the central Stage52 configuration is inherited directly from Stage51 as the median of the field-confirmed long-term peat accretion values.
+The peat rate used for the central Stage52 configuration is inherited directly from Stage51 as the field-derived Clymo-model central estimate 0.38 mm yr-1.
 
 OAT values are the pre-existing Stage45/49 admissible calibration-search support after removing explicit outer guard values. They are not claimed to be independently measured uncertainty intervals.
 
@@ -74,8 +74,8 @@ At r_est = 0.25 yr-1, refitting Kc/Kh restores Integrated to rank 1 (nRMSE 1.918
 
 Do not claim that Integrated wins at every value in the entire calibration-search support. The defensible statement is:
 
-- Integrated has the lowest central error at the independently fixed field-median peat rate;
-- Integrated remains rank 1 across all field-confirmed persistent-net peat-rate values;
+- Integrated has the lowest central error at the independently field-derived central peat rate;
+- Integrated remains rank 1 across the reported long-term Clymo-model peat-rate estimates;
 - under the broad internal calibration-search OAT, Integrated is top-ranked in 21/24 fixed noncentral settings and 22/24 profile-refit settings;
 - the two persistent hydrologic rank reversals are numerically near-ties with Hydrosere, not large reversals;
 - broad calibration-search values are stress tests and must not be presented as independently measured physical uncertainty ranges.
