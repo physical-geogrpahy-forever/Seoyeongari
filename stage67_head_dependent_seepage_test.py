@@ -30,7 +30,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
-from typing import Dict, List, Mapping, Sequence
+from typing import Dict, Mapping, Sequence
 
 import pandas as pd
 
@@ -42,7 +42,6 @@ from eghm_deterministic_kernel import (
     annual_support, build_features, continuous_exposure_state, hydrologic_feature,
 )
 from eghm_deterministic_scenarios import fit_four_scenarios, peat_geomorphic_loss
-from eghm_reproducibility_contract import EXPECTED
 
 OUT = Path('stage67_outputs')
 OUT.mkdir(exist_ok=True)
@@ -54,11 +53,6 @@ OBS = {
     2019: 2045.159, 2021: 1965.256, 2023: 1882.700,
 }
 Y = [float(OBS[y]) for y in EVAL_YEARS]
-
-
-def mean_fsum(values):
-    vals=[float(v) for v in values]
-    return math.fsum(vals)/len(vals)
 
 
 def depth_ratio(v: float, V0: float, p_shape: float) -> float:
