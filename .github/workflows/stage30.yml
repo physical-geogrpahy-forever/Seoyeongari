@@ -1,15 +1,15 @@
-name: Stage61d deterministic forcing forensics
+name: Stage62 official deterministic central fit
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage61d:
+  stage62:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
-        replica: [1, 2, 3, 4]
+        replica: [1, 2]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -20,17 +20,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage61d deterministic forcing forensics
-        run: python stage61d_deterministic_forcing_forensics.py
+      - name: Run Stage62 official central fit
+        run: python stage62_official_deterministic_central_fit.py
       - name: Show summary
-        run: cat stage61d_outputs/stage61d_summary.json
+        run: cat stage62_outputs/stage62_summary.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage61d-${{ matrix.os }}-r${{ matrix.replica }}
+          name: stage62-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage61d_outputs/
-            stage61d_deterministic_forcing_forensics.py
+            stage62_outputs/
+            stage62_official_deterministic_central_fit.py
+            eghm_deterministic_kernel.py
             eghm_deterministic_forcing.py
-            stage61c_scalar_recurrence_forensics.py
             eghm_deterministic_geometry.py
+            eghm_deterministic_fit.py
+            eghm_reproducibility_contract.py
           retention-days: 30
