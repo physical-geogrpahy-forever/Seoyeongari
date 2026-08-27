@@ -1,40 +1,59 @@
-name: Stage59 cross-runner numerical determinism audit
+name: Stage60 deterministic April-May full calibration
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage59:
+  stage60:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage59 numerical audit
-        run: python stage59_cross_runner_numerics_audit.py
-      - name: Show Stage59 summary
-        run: cat stage59_outputs/stage59_summary.json
-      - name: Physical contract
+      - name: Run Stage60 deterministic calibration
+        run: python stage60_deterministic_aprmay_recalibration.py
+      - name: Show Stage60 summary
+        if: always()
+        run: cat stage60_outputs/stage60_summary.json || true
+      - name: Enforce unchanged science and exact physical contract
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage59_outputs/stage59_summary.json').read_text())
-          if d.get('status')!='PASS_STAGE59_NUMERICS_AUDIT': raise SystemExit('audit failed')
-          if max(d['physical_closure'].values())>1e-8: raise SystemExit('closure failed')
+          d=json.loads(pathlib.Path('stage60_outputs/stage60_summary.json').read_text())
+          if d.get('status')!='PASS_SIX_OBSERVATION_CALIBRATION':
+              raise SystemExit('Stage60 no valid candidate')
+          if d.get('pond_area_observation_2022')!='ABSENT_NOT_HOLDOUT':
+              raise SystemExit('2022 pond-area observation must remain absent')
+          if d.get('observation_support')!='April-May':
+              raise SystemExit('observation support mismatch')
+          if d.get('evaluation_window_selected_by_fit') is not False:
+              raise SystemExit('window must be metadata-selected')
+          if d.get('solver_change_is_scientific_parameter_change') is not False:
+              raise SystemExit('solver replacement must not alter scientific contract')
+          if d.get('parameter_grids_changed_from_stage56') is not False or d.get('physical_process_structure_changed_from_stage56') is not False:
+              raise SystemExit('Stage56 science/grid changed')
+          s=d['selected']
+          if max(s['max_mass_error_m3'],s['max_area_partition_error_m2'],s['max_precip_partition_error_m3'])>1e-8:
+              raise SystemExit('physical closure failed')
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: stage59-${{ matrix.os }}
+          name: stage60-deterministic-${{ matrix.os }}
           path: |
-            stage59_outputs/
-            stage59_cross_runner_numerics_audit.py
-            stage57_aprmay_four_scenario_peat.py
-            stage58_aprmay_oat_provenance.py
+            stage60_outputs/
+            stage60_deterministic_aprmay_recalibration.py
+            eghm_deterministic_fit.py
+            stage49_six_observation_irreversible_recruitment.py
+            stage56_aprmay_recalibration.py
+            stage38_domain_corrected.py
+            EGHM_STRICT_MODEL_RULES.md
+          if-no-files-found: warn
           retention-days: 30
