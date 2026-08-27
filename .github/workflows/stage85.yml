@@ -1,0 +1,57 @@
+name: Stage85 exact TLMM integrated model
+
+on:
+  push:
+    branches:
+      - chatgpt-stage30-20260826
+    paths:
+      - 'stage85_exact_tlmm_integrated.py'
+      - 'tlmm_core.py'
+      - 'eghm_deterministic_forcing.py'
+      - 'eghm_deterministic_geometry.py'
+      - 'OBS_AWS_DD_20250930013603.csv'
+      - 'OBS_ASOS_DD_20250930041037.csv'
+      - '.github/workflows/stage85.yml'
+  workflow_dispatch:
+
+jobs:
+  stage85:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy pandas mpmath
+      - name: Run Stage85 four-scenario model
+        run: python stage85_exact_tlmm_integrated.py
+      - name: Enforce Stage85 contracts
+        run: |
+          python - <<'PY'
+          import json
+          import pandas as pd
+          from pathlib import Path
+          p=Path('stage85_outputs')
+          a=json.loads((p/'stage85_run_audit.json').read_text())
+          assert a['status']=='PASS_STAGE85_EXACT_TLMM_INTEGRATED_RUN'
+          assert a['ecology_core'].startswith('official TLMM MLL/MUL')
+          assert a['independent_elevation_band_state'] is False
+          assert a['additive_exposure_score'] is False
+          assert a['pond_area_parameter_fitting'] is False
+          assert a['observation_2022_used'] is False
+          assert a['max_mass_error_m3'] < 1e-8, a['max_mass_error_m3']
+          s=pd.read_csv(p/'stage85_four_scenario_summary_s30.csv')
+          assert set(s['Scenario'])=={'Baseline Model','Hydrosere Only Model','Eco-Geo Only Model','Integrated Model'}
+          assert s['nRMSE_pct'].notna().all()
+          e=pd.read_csv(p/'stage85_all_evaluation_years.csv')
+          assert set(e['Year'])=={2013,2015,2017,2019,2021,2023}
+          assert 2022 not in set(e['Year'])
+          z=pd.read_csv(p/'stage85_s15_s30_published_sensitivity.csv')
+          assert set(z['s_yr'])=={15.0,30.0}
+          print(s.to_string(index=False))
+          print(z.to_string(index=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage85-exact-tlmm-integrated-results
+          path: stage85_outputs/
