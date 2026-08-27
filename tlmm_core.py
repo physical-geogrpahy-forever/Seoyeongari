@@ -8,14 +8,13 @@ Non-equilibrium Approach to Predicting Marsh Vegetation on Shorelines and in
 Floodplains. Wetlands 40, 667–680. DOI: 10.1007/s13157-019-01229-9.
 
 The implementation below was checked against the authors' official Springer
-supplementary workbook (13157_2019_1229_MOESM1_ESM.xlsx).  The workbook does
-NOT update independent vegetation bands.  It recursively updates two elevation
-boundaries:
+supplementary workbook (13157_2019_1229_MOESM1_ESM.xlsx). The workbook
+recursively updates two elevation boundaries:
 
 * MLL — marsh lower limit, controlled by continuous flooding duration dt;
 * MUL — marsh upper limit, controlled by continuous dewatering duration xt.
 
-The exact Excel recursions are reproduced here.  No exposure score, GDD score,
+The exact Excel recursions are reproduced here. No exposure score, GDD score,
 logistic transition, pond-area fitting parameter, or hybrid succession rule is
 introduced.
 """
@@ -23,7 +22,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 C_MIN_DEFAULT = 0.01
 W_MIN_DEFAULT = 0.001
@@ -87,13 +86,11 @@ def lower_limit_step(water_level: float, previous_lower_limit: float,
                      cmin: float = C_MIN_DEFAULT):
     """Exact MLL spreadsheet recurrence.
 
-    Workbook pattern (e.g. combined Lake Erie sheet):
-      C_t = IF(B_t > G_{t-1}, C_{t-1}+1, 0)
-      D_t = IF(-LOG10(cmin)*(C_t-f)/f < 0, expression, 0)
-      E_t = 10^D_t
-      F_t = (1-E_t)/(1-cmin)
-      G_t = IF(B_t <= G_{t-1}, B_t,
-               B_t - F_t*(B_t-G_{t-1}))
+    C_t = IF(B_t > G_{t-1}, C_{t-1}+1, 0)
+    D_t = IF(-LOG10(cmin)*(C_t-f)/f < 0, expression, 0)
+    E_t = 10^D_t
+    F_t = (1-E_t)/(1-cmin)
+    G_t = IF(B_t <= G_{t-1}, B_t, B_t-F_t*(B_t-G_{t-1}))
     """
     wl=float(water_level); prev=float(previous_lower_limit)
     dt=int(previous_dt)+1 if wl>prev else 0
@@ -107,13 +104,11 @@ def upper_limit_step(water_level: float, previous_upper_limit: float,
                      wmin: float = W_MIN_DEFAULT):
     """Exact MUL spreadsheet recurrence.
 
-    Workbook pattern (e.g. combined Lake Erie sheet):
-      H_t = IF(B_t >= L_{t-1}, 0, H_{t-1}+1)
-      I_t = IF(-LOG10(wmin)*(H_t-s)/s < 0, expression, 0)
-      J_t = 10^I_t
-      K_t = (1-J_t)/(1-wmin)
-      L_t = IF(B_t >= L_{t-1}, B_t,
-               B_t - K_t*(B_t-L_{t-1}))
+    H_t = IF(B_t >= L_{t-1}, 0, H_{t-1}+1)
+    I_t = IF(-LOG10(wmin)*(H_t-s)/s < 0, expression, 0)
+    J_t = 10^I_t
+    K_t = (1-J_t)/(1-wmin)
+    L_t = IF(B_t >= L_{t-1}, B_t, B_t-K_t*(B_t-L_{t-1}))
     """
     wl=float(water_level); prev=float(previous_upper_limit)
     xt=0 if wl>=prev else int(previous_xt)+1
@@ -126,12 +121,20 @@ def boundary_history(years: Sequence[int], growing_season_water_levels: Sequence
                      *, f_yr: float = F_TEMPERATE_YR,
                      s_yr: float = S_TEMPERATE_YR,
                      cmin: float = C_MIN_DEFAULT,
-                     wmin: float = W_MIN_DEFAULT) -> List[TLMMBoundaryYear]:
-    """Run the official workbook recursion through an annual WL series.
+                     wmin: float = W_MIN_DEFAULT,
+                     initial_lower_limit: Optional[float] = None,
+                     initial_upper_limit: Optional[float] = None) -> List[TLMMBoundaryYear]:
+    """Run the official workbook recurrence through an annual WL series.
 
-    The first record initializes MLL=MUL=the first water level and both duration
-    counters to zero, matching the supplementary workbook's first data row.
-    Subsequent records apply the exact recurrences above.
+    With no explicit initial limits, the first record initializes MLL=MUL to
+    the first water level, exactly matching the supplementary workbook.
+
+    Explicit initial limits are allowed because TLMM is a state-history model:
+    a study with an observed starting vegetation boundary can initialize that
+    state and use the same published recurrence thereafter. The first annual
+    water-level record is then retained only as the driver's reported value;
+    recurrence begins with the second record, just as the workbook's first row
+    supplies the initial state for later rows.
     """
     if len(years)!=len(growing_season_water_levels):
         raise ValueError("years and water levels must have equal length")
@@ -140,9 +143,13 @@ def boundary_history(years: Sequence[int], growing_season_water_levels: Sequence
     _validate_positive("f_yr",f_yr); _validate_positive("s_yr",s_yr)
     _validate_minimum("cmin",cmin); _validate_minimum("wmin",wmin)
     y0=int(years[0]); wl0=float(growing_season_water_levels[0])
-    out=[TLMMBoundaryYear(y0,wl0,0,marsh_remaining_after_flooding(0,f_yr,cmin),wl0,
-                          0,marsh_remaining_after_dewatering(0,s_yr,wmin),wl0)]
-    prev_lower=wl0; prev_upper=wl0; prev_dt=0; prev_xt=0
+    lower0=wl0 if initial_lower_limit is None else float(initial_lower_limit)
+    upper0=wl0 if initial_upper_limit is None else float(initial_upper_limit)
+    if lower0>upper0:
+        raise ValueError("initial_lower_limit must be <= initial_upper_limit")
+    out=[TLMMBoundaryYear(y0,wl0,0,marsh_remaining_after_flooding(0,f_yr,cmin),lower0,
+                          0,marsh_remaining_after_dewatering(0,s_yr,wmin),upper0)]
+    prev_lower=lower0; prev_upper=upper0; prev_dt=0; prev_xt=0
     for y,wl in zip(years[1:],growing_season_water_levels[1:]):
         dt,fl,lower=lower_limit_step(wl,prev_lower,prev_dt,f_yr=f_yr,cmin=cmin)
         xt,fu,upper=upper_limit_step(wl,prev_upper,prev_xt,s_yr=s_yr,wmin=wmin)
