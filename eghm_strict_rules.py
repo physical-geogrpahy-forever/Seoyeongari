@@ -1,33 +1,32 @@
 #!/usr/bin/env python3
 """Non-negotiable acceptance gates for Seoyeongari EGHM experiments.
 
-Current mapped-wetland-extent contract (2026-08-27)
-----------------------------------------------------
-The long-term observation set contains exactly six mapped wetland-extent years:
-2013, 2015, 2017, 2019, 2021 and 2023. The original thesis defines this remote-
-sensing quantity through wetland/transition-zone extent relative to terrestrial
-vegetation and forest encroachment. It is not a daily open-water observation.
-There is no 2022 mapped-wetland-extent observation in the current analysis.
-2022 meteorology may remain in the continuous forcing series, but no 2022 area
-value is fitted, held out, scored, ranked, or used as a stopping criterion.
+Current observation contract (Stage70, 2026-08-27)
+--------------------------------------------------
+The active R1 Methods define the historical area observations as manually
+digitized water-body boundaries from 0.5-m orthorectified airborne images, used
+to quantify open-water pond surface area. The current target set contains six
+observed years: 2013, 2015, 2017, 2019, 2021 and 2023. There is no 2022 mapped
+pond-area observation in the current analysis; 2022 meteorology remains in the
+continuous forcing series only.
 
-The current observation-operator process support is April-May, based on archived
-image acquisition metadata rather than fit optimization. Seasonal visible-pool
-presence/exposure is a separate hydroperiod validation variable. Numerical zero
-surface storage may be reported as a hydraulic diagnostic, but must not be
-silently equated with visible open-water absence without independently supported
-surface-expression geometry.
+Archived acquisition metadata place the historical images in April or May, so
+the current observation-operator process support is April-May until exact dates
+are recovered. The historical mapped pond area must be distinguished from the
+daily conserved hydraulic state (surface storage and hydraulic wetted area) and
+from the binary/qualitative seasonal observation of visible-pool presence or
+disappearance. Numerical V==0 is not silently treated as visible-pool absence.
 
-Leave-one-year-out and nested-CV quantities may be computed for historical or
-diagnostic purposes, but they are not acceptance gates and must not determine
-which physical/ecological candidate is selected. The accepted model is selected
-from the six observed years subject first to process and closure constraints.
+Historical undergraduate-thesis wording described the same polygon series more
+broadly as wetland-area change during terrestrialization. That provenance is
+retained, but the current R1 water-body digitization definition controls the
+active EGHM observation contract.
 """
 from __future__ import annotations
 
 EVAL_YEARS = (2013, 2015, 2017, 2019, 2021, 2023)
 OBS_MONTHS = (4, 5)
-OBSERVATION_VARIABLE = 'mapped_wetland_extent'
+OBSERVATION_VARIABLE = 'mapped_open_water_pond_surface_area'
 HYDRAULIC_STATE_VARIABLE = 'daily_surface_storage_and_hydraulic_wetted_area'
 HYDROPERIOD_VALIDATION_VARIABLE = 'visible_surface_pool_presence_or_exposure'
 MASS_TOL_M3 = 1e-8
@@ -92,10 +91,10 @@ def candidate_reasons(
 ) -> list[str]:
     """Return current acceptance failures.
 
-    Full-six-year mapped-wetland-extent nRMSE remains a gate. LOOCV/nested-CV
-    are opt-in diagnostics only and default to False under the current six-
-    observation contract. Hydroperiod evidence is not scored here because it is
-    a separate observation variable.
+    Full-six-year mapped open-water pond-area nRMSE remains a gate. LOOCV and
+    nested CV are opt-in diagnostics only. Seasonal visible-pool timing is a
+    separate external hydroperiod diagnostic and is not reduced to V==0 or an
+    arbitrary fitted depth threshold here.
     """
     r = contract_reasons(contract)
     if float(candidate.get('max_mass_error_m3', float('inf'))) > MASS_TOL_M3:
