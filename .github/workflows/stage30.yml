@@ -1,41 +1,42 @@
-name: Stage75 cumulative-exposure ET feedback
+name: Stage75b cumulative-exposure ET feedback
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage75:
+  stage75b:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas mpmath
-      - name: Run Stage75 ET feedback test
-        run: python stage75_cumulative_exposure_et_feedback.py
+      - name: Run cached Stage75b ET feedback test
+        run: python stage75b_cumulative_exposure_et_feedback_fast.py
       - name: Show summary
-        run: cat stage75_outputs/stage75_summary.json
+        run: cat stage75b_outputs/stage75b_summary.json
       - name: Enforce data and physical contract only
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage75_outputs/stage75_summary.json').read_text())
-          if d.get('status') != 'PASS_STAGE75_REFERENCE_BOUNDED_ET_FEEDBACK_TEST': raise SystemExit('Stage75 failed')
+          d=json.loads(pathlib.Path('stage75b_outputs/stage75b_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE75B_REFERENCE_BOUNDED_ET_FEEDBACK_TEST': raise SystemExit('Stage75b failed')
           if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
+          if d.get('scientific_equations_identical_to_stage75') is not True: raise SystemExit('Stage75b science mismatch')
           if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
-          # Kterr direction and accuracy are scientific outputs, not acceptance gates.
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: stage75-${{ matrix.os }}
+          name: stage75b-${{ matrix.os }}
           path: |
-            stage75_outputs/
+            stage75b_outputs/
+            stage75b_cumulative_exposure_et_feedback_fast.py
             stage75_cumulative_exposure_et_feedback.py
             stage74_hydroperiod_hazard_identifiability.py
             STAGE73_74_ECO_RULE_DECISION_LOG.md
