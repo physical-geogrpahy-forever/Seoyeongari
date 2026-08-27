@@ -1,59 +1,44 @@
-name: Stage60 deterministic April-May full calibration
+name: Stage60b feature determinism forensics
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  stage60:
+  stage60b:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
+        replica: [1, 2]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 15
+    env:
+      REPLICA: ${{ matrix.replica }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage60 deterministic calibration
-        run: python stage60_deterministic_aprmay_recalibration.py
-      - name: Show Stage60 summary
-        if: always()
-        run: cat stage60_outputs/stage60_summary.json || true
-      - name: Enforce unchanged science and exact physical contract
+      - name: Run Stage60b feature forensics
+        run: python stage60b_feature_determinism_forensics.py
+      - name: Show summary
+        run: cat stage60b_outputs/stage60b_summary.json
+      - name: Enforce physical closure only
         run: |
           python - <<'PY'
           import json, pathlib
-          d=json.loads(pathlib.Path('stage60_outputs/stage60_summary.json').read_text())
-          if d.get('status')!='PASS_SIX_OBSERVATION_CALIBRATION':
-              raise SystemExit('Stage60 no valid candidate')
-          if d.get('pond_area_observation_2022')!='ABSENT_NOT_HOLDOUT':
-              raise SystemExit('2022 pond-area observation must remain absent')
-          if d.get('observation_support')!='April-May':
-              raise SystemExit('observation support mismatch')
-          if d.get('evaluation_window_selected_by_fit') is not False:
-              raise SystemExit('window must be metadata-selected')
-          if d.get('solver_change_is_scientific_parameter_change') is not False:
-              raise SystemExit('solver replacement must not alter scientific contract')
-          if d.get('parameter_grids_changed_from_stage56') is not False or d.get('physical_process_structure_changed_from_stage56') is not False:
-              raise SystemExit('Stage56 science/grid changed')
-          s=d['selected']
-          if max(s['max_mass_error_m3'],s['max_area_partition_error_m2'],s['max_precip_partition_error_m3'])>1e-8:
-              raise SystemExit('physical closure failed')
+          d=json.loads(pathlib.Path('stage60b_outputs/stage60b_summary.json').read_text())
+          if d.get('status')!='PASS_STAGE60B_FORENSICS': raise SystemExit('forensics failed')
+          if max(d['physical_closure'].values())>1e-8: raise SystemExit('physical closure failed')
           PY
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: stage60-deterministic-${{ matrix.os }}
+          name: stage60b-${{ matrix.os }}-r${{ matrix.replica }}
           path: |
-            stage60_outputs/
-            stage60_deterministic_aprmay_recalibration.py
-            eghm_deterministic_fit.py
+            stage60b_outputs/
+            stage60b_feature_determinism_forensics.py
             stage49_six_observation_irreversible_recruitment.py
-            stage56_aprmay_recalibration.py
+            stage45_expanded_hydrology_nested.py
             stage38_domain_corrected.py
-            EGHM_STRICT_MODEL_RULES.md
-          if-no-files-found: warn
           retention-days: 30
