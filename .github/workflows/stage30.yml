@@ -1,10 +1,10 @@
-name: Stage46 continuous exposure recruitment validation
+name: Stage47 habitat occupancy recruitment validation
 on:
   push:
     branches: [chatgpt-stage30-20260826]
   workflow_dispatch:
 jobs:
-  run-stage46:
+  run-stage47:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -13,19 +13,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas
-      - name: Run Stage 46 continuous exposure recruitment + expanded hydrology
-        id: stage46
+      - name: Run Stage 47 habitat occupancy recruitment + expanded hydrology
+        id: stage47
         continue-on-error: true
-        run: python stage46_continuous_exposure_recruitment.py
-      - name: Show Stage 46 summary
+        run: python stage47_habitat_occupancy_recruitment.py
+      - name: Show Stage 47 summary
         if: always()
-        run: cat stage46_outputs/stage46_summary.json || true
-      - name: Show Stage 46 diagnostic preview
+        run: cat stage47_outputs/stage47_summary.json || true
+      - name: Show Stage 47 diagnostic preview
         if: always()
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage46_outputs/stage46_summary.json')
+          p=pathlib.Path('stage47_outputs/stage47_summary.json')
           if p.exists():
               d=json.loads(p.read_text())
               print('status=',d.get('status'))
@@ -36,27 +36,27 @@ jobs:
               print('outer=',json.dumps(d.get('nested_outer_folds'),indent=2))
               print('best_rejected_preview=',json.dumps(d.get('best_rejected_preview',[])[:10],indent=2))
           PY
-      - name: Enforce every Stage 46 pre-holdout gate
+      - name: Enforce every Stage 47 pre-holdout gate
         if: always()
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('stage46_outputs/stage46_summary.json')
+          p=pathlib.Path('stage47_outputs/stage47_summary.json')
           d=json.loads(p.read_text()) if p.exists() else {}
           if not d.get('nested_selection_pass',False):
-              raise SystemExit('Stage46 strict/nested gate failed; 2022 remains sealed')
+              raise SystemExit('Stage47 strict/nested gate failed; 2022 remains sealed')
           PY
-      - name: Run 2022 holdout only after full Stage 46 pass
-        run: python stage46_holdout_2022.py
+      - name: Run 2022 holdout only after full Stage 47 pass
+        run: python stage47_holdout_2022.py
       - name: Show holdout summary
-        run: cat stage46_holdout_outputs/stage46_holdout_2022.json
+        run: cat stage47_holdout_outputs/stage47_holdout_2022.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage46-continuous-exposure-results
+          name: stage47-habitat-occupancy-results
           path: |
-            stage46_outputs/
-            stage46_holdout_outputs/
+            stage47_outputs/
+            stage47_holdout_outputs/
             EGHM_STRICT_MODEL_RULES.md
           if-no-files-found: warn
           retention-days: 30
