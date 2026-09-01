@@ -1,0 +1,40 @@
+name: Stage86 Stage85 seasonal budget diagnostic
+
+on:
+  push:
+    branches: [chatgpt-stage30-20260826]
+    paths:
+      - 'stage86_stage85_seasonal_budget_diagnostic.py'
+      - 'stage85_exact_tlmm_integrated.py'
+      - 'eghm_deterministic_forcing.py'
+      - 'eghm_deterministic_geometry.py'
+      - 'OBS_AWS_DD_20250930013603.csv'
+      - 'OBS_ASOS_DD_20250930041037.csv'
+      - '.github/workflows/stage86.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy pandas mpmath
+      - run: python stage86_stage85_seasonal_budget_diagnostic.py
+      - name: Contract checks
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          a=json.loads(pathlib.Path('stage86_outputs/stage86_audit.json').read_text())
+          assert a['status']=='PASS_STAGE86_STAGE85_BASELINE_SEASONAL_AUDIT'
+          assert a['max_area_difference_vs_stage85_m2'] < 1e-10
+          assert a['max_volume_difference_vs_stage85_m3'] < 1e-10
+          assert a['max_mass_error_m3'] < 1e-8
+          assert a['parameters_changed'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage86-seasonal-budget-diagnostic
+          path: stage86_outputs/

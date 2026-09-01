@@ -1,0 +1,101 @@
+name: Stage78 legacy + Stage79 TLMM
+on:
+  push:
+    branches: [chatgpt-stage30-20260826]
+  workflow_dispatch:
+jobs:
+  stage78-legacy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas mpmath
+      - name: Run legacy Stage78 comparison for regression provenance
+        run: python stage78_cumulative_exposure_four_scenarios.py
+      - name: Enforce legacy data and physical contract only
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          d=json.loads(pathlib.Path('stage78_outputs/stage78_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE78_CUMULATIVE_EXPOSURE_FOUR_SCENARIO_COMPARISON': raise SystemExit('Stage78 failed')
+          if d.get('pond_area_observation_2022') != 'ABSENT': raise SystemExit('2022 must remain absent')
+          if max(d.get('physical_closure',{}).values()) > 1e-8: raise SystemExit('closure failed')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage78-legacy-${{ matrix.os }}
+          path: stage78_outputs/
+          retention-days: 30
+
+  stage79-tlmm:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas mpmath
+      - name: Test published TLMM equations and transitions
+        run: python test_tlmm_core.py
+      - name: Run Stage79 TLMM process diagnostic
+        run: python stage79_tlmm_process_diagnostic.py
+      - name: Enforce TLMM provenance and numerical contracts
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          d=json.loads(pathlib.Path('stage79_outputs/stage79_summary.json').read_text())
+          if d.get('status') != 'PASS_STAGE79_PUBLISHED_TLMM_PROCESS_DIAGNOSTIC': raise SystemExit('Stage79 failed')
+          if d.get('stage78_beta_D_used') is not False: raise SystemExit('beta_D must be absent from TLMM')
+          if d.get('pond_area_fit_used_to_select_tlmm_parameters') is not False: raise SystemExit('TLMM parameter fitting is forbidden')
+          if d.get('vegetation_et_feedback_added') is not False: raise SystemExit('Stage79 must remain a process diagnostic')
+          if d.get('peat_feedback_added') is not False: raise SystemExit('Stage79 must remain a process diagnostic')
+          if max(d.get('physical_hydrology_closure',{}).values()) > 1e-8: raise SystemExit('hydrologic closure failed')
+          if max(max(x.values()) for x in d.get('audits',{}).values() if isinstance(x,dict) and x) > 1e-7:
+              # n_exact_hypsometric_intervals is not an error term; check explicit fields below instead.
+              pass
+          for q in d['audits'].values():
+              if q['max_cover_partition_error_m2'] > 1e-8: raise SystemExit('TLMM cover partition failed')
+              if q['max_hydraulic_band_integration_error_m2'] > 1e-8: raise SystemExit('TLMM hypsometric integration failed')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage79-tlmm-${{ matrix.os }}
+          path: |
+            stage79_outputs/
+            tlmm_core.py
+            test_tlmm_core.py
+            stage79_tlmm_process_diagnostic.py
+          retention-days: 30
+
+  tlmm-reference-audit:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download and audit published TLMM ESM workbook
+        run: python tlmm_reference_spreadsheet_audit.py
+      - name: Show compact reference audit
+        run: cat tlmm_reference_spreadsheet_audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tlmm-published-esm-audit
+          path: |
+            tlmm_reference_spreadsheet_audit.json
+            tlmm_esm_*.json
+            tlmm_reference_spreadsheet_audit.py
+          retention-days: 30
