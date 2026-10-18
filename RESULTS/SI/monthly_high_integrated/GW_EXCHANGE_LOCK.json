@@ -1,0 +1,27 @@
+{
+  "stage": "239_monthly_explicit_groundwater_exchange_sensitivity",
+  "base": "Stage239 sigma=0.065 Combined tree-ring case; no other science parameters changed",
+  "groundwater_term": "Qgw = Cgw * A_WET * (GW_EL(year,month) - GW_EL(2020,same month)); active daily using monthly boundary head anomaly; signed exchange added explicitly to daily storage balance",
+  "GW_reference_year": 2020,
+  "GW_monthly_source_csv": "/mnt/data/SEOGYEONGARI_STAGE239_EXPLICIT_GW_EXCHANGE_2026-09-01/jq_geumak1_monthly_head_extracted.csv",
+  "Cgw_d-1": [
+    0.005,
+    0.0075,
+    0.01,
+    0.015,
+    0.02,
+    0.03,
+    0.05
+  ],
+  "interpretation": "structural sensitivity / reviewer-requested simplified groundwater term; Cgw is not site-calibrated and no central value is selected from area fit",
+  "existing_Qsub": "unchanged Stage239 rain-free R_DRY=0.0114 m/d recession term retained",
+  "sigma_m": 0.065,
+  "scored_years": [
+    2013,
+    2015,
+    2017,
+    2019,
+    2021,
+    2023
+  ]
+}
