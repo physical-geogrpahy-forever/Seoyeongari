@@ -1,6 +1,6 @@
-# Seoyeongari wetland model — Stage239
+# Seoyeongari wetland model
 
-This repository contains the final Stage239 reproducibility package linked from the paper's Data Availability statement.
+This repository contains the reproducibility package linked from the paper's Data Availability statement.
 
 ## Model status
 
